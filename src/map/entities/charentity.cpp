@@ -963,21 +963,21 @@ void CCharEntity::OnCastFinished(CMagicState& state, action_t& action)
                     uint16 skillChainDamage = battleutils::TakeSkillchainDamage(static_cast<CBattleEntity*>(this), PTarget, actionTarget.param, nullptr);
 
                     if (skillChainDamage < 0)
-					{
-						actionTarget.addEffectParam = -skillChainDamage;
+                    {
+                        actionTarget.addEffectParam = -skillChainDamage;
                         actionTarget.addEffectMessage = 384 + effect;
-					}
-					else
-					{
-						actionTarget.addEffectParam = skillChainDamage;
-						actionTarget.addEffectMessage = 287 + effect;
-					}
-					actionTarget.additionalEffect = effect;
+                    }
+                    else
+                    {
+                        actionTarget.addEffectParam = skillChainDamage;
+                        actionTarget.addEffectMessage = 287 + effect;
+                    }
+                    actionTarget.additionalEffect = effect;
                 }
                 if (StatusEffectContainer->HasStatusEffect(EFFECT_AZURE_LORE))
-				{
-					health.tp = currentTP;
-				}
+                {
+                    health.tp = currentTP;
+                }
                 else if (StatusEffectContainer->HasStatusEffect({ EFFECT_SEKKANOKI, EFFECT_MEIKYO_SHISUI }))
                 {
                     health.tp = (health.tp > 1000 ? health.tp - 1000 : 0);
@@ -990,7 +990,7 @@ void CCharEntity::OnCastFinished(CMagicState& state, action_t& action)
                 StatusEffectContainer->DelStatusEffectSilent(EFFECT_CHAIN_AFFINITY);
 
                 if (actionTarget.param > 0 && PSpell->dealsDamage() && PSpell->getSpellGroup() == SPELLGROUP_BLACK &&
-				   (StatusEffectContainer->HasStatusEffect(EFFECT_IMMANENCE)))
+                   (StatusEffectContainer->HasStatusEffect(EFFECT_IMMANENCE)))
                 {
                     SUBEFFECT effect = SUBEFFECT_NONE;
                     if (PSpell->getSpellFamily() == SPELLFAMILY_STONE || PSpell->getSpellFamily() == SPELLFAMILY_GEOHELIX)
@@ -1230,8 +1230,8 @@ void CCharEntity::OnWeaponSkillFinished(CWeaponSkillState& state, action_t& acti
 
                     // check for ws points
                     uint8 mLvl = this->GetMLevel();
-					uint8 iLvl = 0;
-					uint8 targetLvl = PTarget->GetMLevel();
+                    uint8 iLvl = 0;
+                    uint8 targetLvl = PTarget->GetMLevel();
 
                     if (this->objtype == TYPE_PC)
                     {
@@ -1246,10 +1246,10 @@ void CCharEntity::OnWeaponSkillFinished(CWeaponSkillState& state, action_t& acti
             }
 
             if (damage > 0)
-			{
-				// Trigger Treasure Hunter from weaponskill
-				battleutils::ApplyTreasureHunter(this, PTarget, &actionTarget, false);
-			}
+            {
+                // Trigger Treasure Hunter from weaponskill
+                battleutils::ApplyTreasureHunter(this, PTarget, &actionTarget, false);
+            }
         }
 
         battleutils::ClaimMob(PBattleTarget, this);
@@ -1348,9 +1348,9 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
             newRecast = (uint16)(charge->chargeTime * PAbility->getRecastTime() - meritRecastReduction);
 
             if (newRecast < 2)
-			{
-				newRecast = 2;
-			}
+            {
+                newRecast = 2;
+            }
 
             action.recast = newRecast;
         }
@@ -1359,9 +1359,9 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
             newRecast = PAbility->getRecastTime() - meritRecastReduction;
 
             if (newRecast < 2)
-			{
-				newRecast = 2;
-			}
+            {
+                newRecast = 2;
+            }
 
             action.recast = newRecast;
         }
@@ -1393,9 +1393,9 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
             else
             {
                 // Blood Pact recasts can be reduced by a total of 40 seconds
-				int16 bpDelay    = std::min<int16>(getMod(Mod::BP_DELAY), 15);
-				int16 bpDelayII  = std::min<int16>(getMod(Mod::BP_DELAY_II), 15);
-				int16 favorDelay = std::min<int16>(getMod(Mod::AVATARS_FAVOR_BP_DELAY), 10);
+                int16 bpDelay    = std::min<int16>(getMod(Mod::BP_DELAY), 15);
+                int16 bpDelayII  = std::min<int16>(getMod(Mod::BP_DELAY_II), 15);
+                int16 favorDelay = std::min<int16>(getMod(Mod::AVATARS_FAVOR_BP_DELAY), 10);
 
                 action.recast   -= bpDelay + bpDelayII + favorDelay;
             }
@@ -1571,10 +1571,10 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
                 actionTarget.param     = luautils::OnUseAbility(this, PTarget, PAbility, &action);
 
                 if (PTarget->objtype == TYPE_MOB)
-				{
-					// Trigger Treasure Hunter from AoE ability
-					battleutils::ApplyTreasureHunter(this, PTarget, &actionTarget, false);
-				}
+                {
+                    // Trigger Treasure Hunter from AoE ability
+                    battleutils::ApplyTreasureHunter(this, PTarget, &actionTarget, false);
+                }
             }
         }
         else
@@ -1610,10 +1610,10 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
             state.ApplyEnmity();
 
             if (PTarget->objtype == TYPE_MOB)
-			{
-				// Trigger Treasure Hunter from single target ability
-				battleutils::ApplyTreasureHunter(this, PTarget, &actionTarget, false);
-			}
+            {
+                // Trigger Treasure Hunter from single target ability
+                battleutils::ApplyTreasureHunter(this, PTarget, &actionTarget, false);
+            }
         }
         PRecastContainer->Add(RECAST_ABILITY, PAbility->getRecastId(), action.recast);
 
@@ -1684,8 +1684,8 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
     bool  isSange           = false;
     bool  isBarrage         = StatusEffectContainer->HasStatusEffect(EFFECT_BARRAGE, 0);
     bool  isFirstShot       = false;
-	bool  distanceSweetSpot = false;
-	float damagePenalty     = 0.0f;
+    bool  distanceSweetSpot = false;
+    float damagePenalty     = 0.0f;
 
     // if barrage is detected, getBarrageShotCount also checks for ammo count
     if (!ammoThrowing && !rangedThrowing && isBarrage)
@@ -1706,16 +1706,16 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
         hitCount = 3;
     }
 
-	// Ranged attack distance correction variables
-	uint16 trueShot = this->getMod(Mod::TRUE_SHOT);
-	float rangedDistance = distance(this->loc.p, PTarget->loc.p); //m_attacker, m_victim
-	float distanceCorrection = 1.00f + float(trueShot / 100.00f);
+    // Ranged attack distance correction variables
+    uint16 trueShot = this->getMod(Mod::TRUE_SHOT);
+    float rangedDistance = distance(this->loc.p, PTarget->loc.p); //m_attacker, m_victim
+    float distanceCorrection = 1.00f + float(trueShot / 100.00f);
 
-	// Eliminates distance correction if Enhances "Unlimited Shot" is found
-	if (this->StatusEffectContainer->HasStatusEffect(EFFECT_UNLIMITED_SHOT) && this->getMod(Mod::ENH_UNLIMITED_SHOT) > 0)
-	{
-		rangedDistance = 11.5f;
-	}
+    // Eliminates distance correction if Enhances "Unlimited Shot" is found
+    if (this->StatusEffectContainer->HasStatusEffect(EFFECT_UNLIMITED_SHOT) && this->getMod(Mod::ENH_UNLIMITED_SHOT) > 0)
+    {
+        rangedDistance = 11.5f;
+    }
 
     // loop for barrage hits, if a miss occurs, the loop will end
     for (uint8 i = 1; i <= hitCount; ++i)
@@ -1751,9 +1751,9 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
                 realHits++;
 
                 if (i == 1)
-				{
-					isFirstShot = true;
-				}
+                {
+                    isFirstShot = true;
+                }
 
                 if (isSange)
                 {
@@ -1764,114 +1764,114 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
                 damage = (int32)((this->GetRangedWeaponDmg() + battleutils::GetFSTR(this, PTarget, slot)) * pdif);
 
                 // Ranged attack distance correction ideal distances
-				// https://www.bg-wiki.com/ffxi/Distance_Correction
-				// https://ffxiclopedia.fandom.com/wiki/Distance
-				// TODO: Check for target model size and increase allowable distance
-				
-				// Throwing (Ranged or Ammo slot)
-				if (rangedThrowing == true || ammoThrowing == true)
-				{
-					if (rangedDistance >= 1.0f && rangedDistance <= 3.5f && rangedThrowing == true)
-					{
-						damage = (int32)(damage * distanceCorrection);
-						distanceSweetSpot = true;
-					}
-					else if (rangedDistance > 3.5f && rangedThrowing == true)
-					{
-						damagePenalty = (100.0f - rangedDistance) / 100.0f;
-						damage = (int32)(damage * damagePenalty);
-					}
-				}
-				
-				if (PItem != nullptr && PItem->getSkillType() == SKILL_MARKSMANSHIP)
-				{
-					rangedDelay = ((PItem->getDelay() * 60) / 1000);
-					
-					// Marksmanship (Crossbow)
-					if (rangedDelay <= 436)
-					{
-						if (rangedDistance >= 8.5f && rangedDistance <= 12.5f)
-						{
-							damage = (int32)(damage * distanceCorrection);
-							distanceSweetSpot = true;
-						}
-						else if (rangedDistance < 8.5f)
-						{
-							damagePenalty = (100.0f - (40.0f - std::clamp(rangedDistance * 5.0f, 6.5f, 35.0f))) / 100.0f;
-							damage = (int32)(damage * damagePenalty);
-						}
-						else if (rangedDistance >= 12.5f)
-						{
-							damagePenalty = (100.0f - std::clamp(rangedDistance * 0.7f, 5.0f, 14.0f)) / 100.0f;
-							damage = (int32)(damage * damagePenalty);
-						}
-					}
-					
-					//Marksmanship (Gun)
-					if (rangedDelay >= 466)
-					{
-						if (rangedDistance >= 5.5f && rangedDistance <= 7.5f)
-						{
-							damage = (int32)(damage * distanceCorrection);
-							distanceSweetSpot = true;
-						}
-						else if (rangedDistance < 5.5f)
-						{
-							damagePenalty = (100.0f - (30.0f - std::clamp(rangedDistance * 5.0f, 5.0f, 25.0f))) / 100.0f;
-							damage = (int32)(damage * damagePenalty);
-						}
-						else if (rangedDistance > 7.5f)
-						{
-							damagePenalty = (100.0f - std::clamp(rangedDistance * 5.6f, 5.0f, 15.0f)) / 100.0f;
-							damage = (int32)(damage * damagePenalty);
-						}
-					}
-				}
-				
-				if (PItem != nullptr && PItem->getSkillType() == SKILL_ARCHERY)
-				{
-					rangedDelay = ((PItem->getDelay() * 60) / 1000);
-					
-					// Archery (Shortbow)
-					if (rangedDelay <= 436)
-					{
-						if (rangedDistance >= 7.0f && rangedDistance <= 10.0f)
-						{
-							damage = (int32)(damage * distanceCorrection);
-							distanceSweetSpot = true;
-						}
-						else if (rangedDistance < 7.0f)
-						{
-							damagePenalty = (100.0f - (40.0f - std::clamp(rangedDistance * 5.0f, 5.5f, 35.0f))) / 100.0f;
-							damage = (int32)(damage * damagePenalty);
-						}
-						else if (rangedDistance > 10.0f)
-						{
-							damagePenalty = (100.0f - std::clamp(rangedDistance * 0.52f, 1.0f, 13.0f)) / 100.0f;
-							damage = (int32)(damage * damagePenalty);
-						}
-					}
-						
-					// Archery (Longbow)
-					if (rangedDelay >= 466)
-					{
-						if (rangedDistance >= 10.5f && rangedDistance <= 13.5f)
-						{
-							damage = (int32)(damage * distanceCorrection);
-							distanceSweetSpot = true;
-						}
-						else if (rangedDistance < 10.5f)
-						{
-							damagePenalty = (100.0f - (40.0f - std::clamp(rangedDistance * 5.0f, 5.5f, 35.0f))) / 100.0f;
-							damage = (int32)(damage * damagePenalty);
-						}
-						else if (rangedDistance > 13.5f)
-						{
-							damagePenalty = (100.0f - std::clamp(rangedDistance * 0.52f, 1.0f, 13.0f)) / 100.0f;
-							damage = (int32)(damage * damagePenalty);
-						}
-					}
-				}
+                // https://www.bg-wiki.com/ffxi/Distance_Correction
+                // https://ffxiclopedia.fandom.com/wiki/Distance
+                // TODO: Check for target model size and increase allowable distance
+                
+                // Throwing (Ranged or Ammo slot)
+                if (rangedThrowing == true || ammoThrowing == true)
+                {
+                    if (rangedDistance >= 1.0f && rangedDistance <= 3.5f && rangedThrowing == true)
+                    {
+                        damage = (int32)(damage * distanceCorrection);
+                        distanceSweetSpot = true;
+                    }
+                    else if (rangedDistance > 3.5f && rangedThrowing == true)
+                    {
+                        damagePenalty = (100.0f - rangedDistance) / 100.0f;
+                        damage = (int32)(damage * damagePenalty);
+                    }
+                }
+                
+                if (PItem != nullptr && PItem->getSkillType() == SKILL_MARKSMANSHIP)
+                {
+                    rangedDelay = ((PItem->getDelay() * 60) / 1000);
+                    
+                    // Marksmanship (Crossbow)
+                    if (rangedDelay <= 436)
+                    {
+                        if (rangedDistance >= 8.5f && rangedDistance <= 12.5f)
+                        {
+                            damage = (int32)(damage * distanceCorrection);
+                            distanceSweetSpot = true;
+                        }
+                        else if (rangedDistance < 8.5f)
+                        {
+                            damagePenalty = (100.0f - (40.0f - std::clamp(rangedDistance * 5.0f, 6.5f, 35.0f))) / 100.0f;
+                            damage = (int32)(damage * damagePenalty);
+                        }
+                        else if (rangedDistance >= 12.5f)
+                        {
+                            damagePenalty = (100.0f - std::clamp(rangedDistance * 0.7f, 5.0f, 14.0f)) / 100.0f;
+                            damage = (int32)(damage * damagePenalty);
+                        }
+                    }
+                    
+                    //Marksmanship (Gun)
+                    if (rangedDelay >= 466)
+                    {
+                        if (rangedDistance >= 5.5f && rangedDistance <= 7.5f)
+                        {
+                            damage = (int32)(damage * distanceCorrection);
+                            distanceSweetSpot = true;
+                        }
+                        else if (rangedDistance < 5.5f)
+                        {
+                            damagePenalty = (100.0f - (30.0f - std::clamp(rangedDistance * 5.0f, 5.0f, 25.0f))) / 100.0f;
+                            damage = (int32)(damage * damagePenalty);
+                        }
+                        else if (rangedDistance > 7.5f)
+                        {
+                            damagePenalty = (100.0f - std::clamp(rangedDistance * 5.6f, 5.0f, 15.0f)) / 100.0f;
+                            damage = (int32)(damage * damagePenalty);
+                        }
+                    }
+                }
+                
+                if (PItem != nullptr && PItem->getSkillType() == SKILL_ARCHERY)
+                {
+                    rangedDelay = ((PItem->getDelay() * 60) / 1000);
+                    
+                    // Archery (Shortbow)
+                    if (rangedDelay <= 436)
+                    {
+                        if (rangedDistance >= 7.0f && rangedDistance <= 10.0f)
+                        {
+                            damage = (int32)(damage * distanceCorrection);
+                            distanceSweetSpot = true;
+                        }
+                        else if (rangedDistance < 7.0f)
+                        {
+                            damagePenalty = (100.0f - (40.0f - std::clamp(rangedDistance * 5.0f, 5.5f, 35.0f))) / 100.0f;
+                            damage = (int32)(damage * damagePenalty);
+                        }
+                        else if (rangedDistance > 10.0f)
+                        {
+                            damagePenalty = (100.0f - std::clamp(rangedDistance * 0.52f, 1.0f, 13.0f)) / 100.0f;
+                            damage = (int32)(damage * damagePenalty);
+                        }
+                    }
+                        
+                    // Archery (Longbow)
+                    if (rangedDelay >= 466)
+                    {
+                        if (rangedDistance >= 10.5f && rangedDistance <= 13.5f)
+                        {
+                            damage = (int32)(damage * distanceCorrection);
+                            distanceSweetSpot = true;
+                        }
+                        else if (rangedDistance < 10.5f)
+                        {
+                            damagePenalty = (100.0f - (40.0f - std::clamp(rangedDistance * 5.0f, 5.5f, 35.0f))) / 100.0f;
+                            damage = (int32)(damage * damagePenalty);
+                        }
+                        else if (rangedDistance > 13.5f)
+                        {
+                            damagePenalty = (100.0f - std::clamp(rangedDistance * 0.52f, 1.0f, 13.0f)) / 100.0f;
+                            damage = (int32)(damage * damagePenalty);
+                        }
+                    }
+                }
 
                 if (slot == SLOT_RANGED)
                 {
@@ -1925,39 +1925,39 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
             StatusEffectContainer->DelStatusEffect(EFFECT_FLASHY_SHOT);
         }
 
-		// Only remove Stealth Shot on hit
+        // Only remove Stealth Shot on hit
         if (hitOccured && this->StatusEffectContainer->HasStatusEffect(EFFECT_STEALTH_SHOT))
         {
             StatusEffectContainer->DelStatusEffect(EFFECT_STEALTH_SHOT);
         }
 
         // Add Double Shot ammunition cost
-		if (this->getMod(Mod::DOUBLE_SHOT_AMMO) == 1)
-		{
-			++ammoConsumed;
-		}
+        if (this->getMod(Mod::DOUBLE_SHOT_AMMO) == 1)
+        {
+            ++ammoConsumed;
+        }
 
-		// Add Double Shot becomes Triple Shot ammunition cost
-		if (this->getMod(Mod::DOUBLE_SHOT_AMMO) == 2)
-		{
-			++ammoConsumed;
-			++ammoConsumed;
-		}
+        // Add Double Shot becomes Triple Shot ammunition cost
+        if (this->getMod(Mod::DOUBLE_SHOT_AMMO) == 2)
+        {
+            ++ammoConsumed;
+            ++ammoConsumed;
+        }
 
-		// Add Triple Shot ammunition cost
-		if (this->getMod(Mod::TRIPLE_SHOT_AMMO) == 2)
-		{
-			++ammoConsumed;
-			++ammoConsumed;
-		}
+        // Add Triple Shot ammunition cost
+        if (this->getMod(Mod::TRIPLE_SHOT_AMMO) == 2)
+        {
+            ++ammoConsumed;
+            ++ammoConsumed;
+        }
 
-		// Add Triple Shot becomes Quad Shot ammunition cost
-		if (this->getMod(Mod::TRIPLE_SHOT_AMMO) == 3)
-		{
-			++ammoConsumed;
-			++ammoConsumed;
-			++ammoConsumed;
-		}
+        // Add Triple Shot becomes Quad Shot ammunition cost
+        if (this->getMod(Mod::TRIPLE_SHOT_AMMO) == 3)
+        {
+            ++ammoConsumed;
+            ++ammoConsumed;
+            ++ammoConsumed;
+        }
 
         if (PAmmo != nullptr && xirand::GetRandomNumber(100) > recycleChance)
         {
@@ -1984,15 +1984,15 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
         }
 
         // 576 - Ranged attack strikes squarely
-		// 577 - Ranged attack strikes true, pummeling
-		if (distanceSweetSpot == true && isCritical == false)
-		{
-			actionTarget.messageID = 577;
-		}
-		else if (distanceSweetSpot == false && isCritical == false)
-		{
-			actionTarget.messageID = 576;
-		}
+        // 577 - Ranged attack strikes true, pummeling
+        if (distanceSweetSpot == true && isCritical == false)
+        {
+            actionTarget.messageID = 577;
+        }
+        else if (distanceSweetSpot == false && isCritical == false)
+        {
+            actionTarget.messageID = 576;
+        }
 
         actionTarget.param =
             battleutils::TakePhysicalDamage(this, PTarget, PHYSICAL_ATTACK_TYPE::RANGED, totalDamage, false, slot, realHits, nullptr, true, true);
@@ -2023,11 +2023,11 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
         luautils::additionalEffectAttack(this, PTarget, (PAmmo != nullptr ? PAmmo : PItem), &actionTarget, totalDamage);
 
         // Treasure Hunter only applies on the first shot
-		if (isFirstShot == true && actionTarget.param > 0)
-		{
-			// Trigger Treasure Hunter from ranged attack
-			battleutils::ApplyTreasureHunter(this, PTarget, &actionTarget, true);
-		}
+        if (isFirstShot == true && actionTarget.param > 0)
+        {
+            // Trigger Treasure Hunter from ranged attack
+            battleutils::ApplyTreasureHunter(this, PTarget, &actionTarget, true);
+        }
     }
     else if (shadowsTaken > 0)
     {
@@ -2063,21 +2063,21 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
     battleutils::RemoveAmmo(this, ammoConsumed);
 
     if (this->getMod(Mod::DOUBLE_SHOT_AMMO) == 1)
-	{
-		this->delModifier(Mod::DOUBLE_SHOT_AMMO, 1);
-	}
-	if (this->getMod(Mod::DOUBLE_SHOT_AMMO) == 2)
-	{
-		this->delModifier(Mod::DOUBLE_SHOT_AMMO, 2);
-	}
-	if (this->getMod(Mod::TRIPLE_SHOT_AMMO) == 2)
-	{
-		this->delModifier(Mod::TRIPLE_SHOT_AMMO, 2);
-	}
-	if (this->getMod(Mod::TRIPLE_SHOT_AMMO) == 3)
-	{
-		this->delModifier(Mod::TRIPLE_SHOT_AMMO, 3);
-	}
+    {
+        this->delModifier(Mod::DOUBLE_SHOT_AMMO, 1);
+    }
+    if (this->getMod(Mod::DOUBLE_SHOT_AMMO) == 2)
+    {
+        this->delModifier(Mod::DOUBLE_SHOT_AMMO, 2);
+    }
+    if (this->getMod(Mod::TRIPLE_SHOT_AMMO) == 2)
+    {
+        this->delModifier(Mod::TRIPLE_SHOT_AMMO, 2);
+    }
+    if (this->getMod(Mod::TRIPLE_SHOT_AMMO) == 3)
+    {
+        this->delModifier(Mod::TRIPLE_SHOT_AMMO, 3);
+    }
 
     // only remove detectables
     StatusEffectContainer->DelStatusEffectsByFlag(EFFECTFLAG_DETECTABLE);
@@ -2350,18 +2350,18 @@ void CCharEntity::Die()
     battleutils::RelinquishClaim(this);
 
     // Floor the dying char's enmity
-	if (PLastAttacker && PLastAttacker->objtype == TYPE_MOB)
-	{
-		((CMobEntity*)PLastAttacker)->PEnmityContainer->LowerEnmityByPercent(this, 99, nullptr);
-	}
+    if (PLastAttacker && PLastAttacker->objtype == TYPE_MOB)
+    {
+        ((CMobEntity*)PLastAttacker)->PEnmityContainer->LowerEnmityByPercent(this, 99, nullptr);
+    }
 
-	if (this->PPet != nullptr)
-	{
-		if (!this->PPet->isCharmed)
-		{
-			petutils::DespawnPet(this);
-		}
-	}
+    if (this->PPet != nullptr)
+    {
+        if (!this->PPet->isCharmed)
+        {
+            petutils::DespawnPet(this);
+        }
+    }
 
     Die(death_duration);
     SetDeathTimestamp((uint32)time(nullptr));
@@ -2378,21 +2378,21 @@ void CCharEntity::Die()
     }
 
     // Tracks the number of deaths the char has suffered
-	if (charutils::GetCharVar(this, "TotalDeaths") == 0)
-	{
-		charutils::SetCharVar(this, "TotalDeaths", 1);
-	}
-	else
-	{
-		charutils::SetCharVar(this, "TotalDeaths", charutils::GetCharVar(this, "TotalDeaths") + 1);
-	}
+    if (charutils::GetCharVar(this, "TotalDeaths") == 0)
+    {
+        charutils::SetCharVar(this, "TotalDeaths", 1);
+    }
+    else
+    {
+        charutils::SetCharVar(this, "TotalDeaths", charutils::GetCharVar(this, "TotalDeaths") + 1);
+    }
 
-	// Resets the !godmode and !minigodmode character variables so they don't have to be toggled
-	if (charutils::GetCharVar(this, "GodMode") == 1 || charutils::GetCharVar(this, "MiniGodMode") == 1)
-	{
-		charutils::SetCharVar(this, "GodMode", 0);
-		charutils::SetCharVar(this, "MiniGodMode", 0);
-	}
+    // Resets the !godmode and !minigodmode character variables so they don't have to be toggled
+    if (charutils::GetCharVar(this, "GodMode") == 1 || charutils::GetCharVar(this, "MiniGodMode") == 1)
+    {
+        charutils::SetCharVar(this, "GodMode", 0);
+        charutils::SetCharVar(this, "MiniGodMode", 0);
+    }
 
     luautils::OnPlayerDeath(this);
 }
