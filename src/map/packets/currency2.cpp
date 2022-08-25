@@ -53,13 +53,12 @@ CCurrencyPacket2::CCurrencyPacket2(CCharEntity* PChar)
     if (ret != SQL_ERROR && sql->NextRow() == SQL_SUCCESS)
     {
         ref<uint32>(0x04) = sql->GetUIntData(0); // bayld
-        ref<uint16>(0x08) = sql->GetUIntData(1); // kinetic_unit
         ref<uint8>(0x0A)  = sql->GetUIntData(2); // imprimaturs
-        ref<uint8>(0x0B)  = sql->GetUIntData(3); // mystical_canteen
+        ref<uint16>(0x08) = sql->GetUIntData(1); // kinetic_unit
         ref<uint32>(0x0C) = sql->GetUIntData(4); // obsidian_fragment
         ref<uint16>(0x10) = sql->GetUIntData(5); // lebondopt_wing
         ref<uint16>(0x12) = sql->GetUIntData(6); // pulchridopt_wing
-        ref<uint32>(0x14) = sql->GetUIntData(7); // mewya_plasm
+        // mellidopt_wing
 
         ref<uint8>(0x18) = sql->GetUIntData(8);  // ghastly_stone
         ref<uint8>(0x19) = sql->GetUIntData(9);  // ghastly_stone_1
@@ -108,21 +107,17 @@ CCurrencyPacket2::CCurrencyPacket2(CCharEntity* PChar)
         ref<uint8>(0x43) = sql->GetUIntData(51); // duskorb_stone_1
         ref<uint8>(0x44) = sql->GetUIntData(52); // duskorb_stone_2
 
+        ref<uint32>(0x14) = sql->GetUIntData(7); // mewya_plasm
+        ref<uint32>(0x4C) = sql->GetUIntData(57); // escha_silt
+        ref<uint16>(0x4A) = sql->GetUIntData(56); // escha_beads
+
         ref<uint8>(0x45) = sql->GetUIntData(53); // pellucid_stone
         ref<uint8>(0x46) = sql->GetUIntData(54); // fern_stone
         ref<uint8>(0x47) = sql->GetUIntData(55); // taupe_stone
 
-        ref<uint16>(0x4A) = sql->GetUIntData(56); // escha_beads
-        ref<uint32>(0x4C) = sql->GetUIntData(57); // escha_silt
-
         ref<uint32>(0x50) = sql->GetUIntData(58); // potpourri
 
-        ref<uint32>(0x54) = sql->GetUIntData(59); // current_hallmarks
-        ref<uint32>(0x58) = sql->GetUIntData(60); // total_hallmarks
-        ref<uint32>(0x5C) = sql->GetUIntData(61); // gallantry
-
         ref<uint32>(0x60) = sql->GetUIntData(62); // crafter_points
-
         ref<uint8>(0x64) = sql->GetUIntData(63); // fire_crystal_set
         ref<uint8>(0x65) = sql->GetUIntData(64); // ice_crystal_set
         ref<uint8>(0x66) = sql->GetUIntData(65); // wind_crystal_set
@@ -131,6 +126,7 @@ CCurrencyPacket2::CCurrencyPacket2(CCharEntity* PChar)
         ref<uint8>(0x69) = sql->GetUIntData(68); // water_crystal_set
         ref<uint8>(0x6A) = sql->GetUIntData(69); // light_crystal_set
         ref<uint8>(0x6B) = sql->GetUIntData(70); // dark_crystal_set
+
         ref<uint8>(0x6C) = sql->GetUIntData(71); // mc_s_sr01_set
         ref<uint8>(0x6D) = sql->GetUIntData(72); // mc_s_sr02_set
         ref<uint8>(0x6E) = sql->GetUIntData(73); // mc_s_sr03_set
@@ -149,6 +145,17 @@ CCurrencyPacket2::CCurrencyPacket2(CCharEntity* PChar)
         ref<uint8>(0x7B) = sql->GetUIntData(86); // light_spheres_set
         ref<uint8>(0x7C) = sql->GetUIntData(87); // darkness_spheres_set
 
+        ref<uint32>(0x54) = sql->GetUIntData(59); // current_hallmarks
+        ref<uint32>(0x58) = sql->GetUIntData(60); // total_hallmarks
+        ref<uint32>(0x5C) = sql->GetUIntData(61); // gallantry
+
         ref<uint32>(0x80) = sql->GetUIntData(88); // silver_aman_voucher
+
+        ref<uint8>(0x0B)  = sql->GetUIntData(3); // mystical_canteen
+
+        // domain_points
+        // domain_points_today
+        // mog_segments
+        // gallimaufry
     }
 }

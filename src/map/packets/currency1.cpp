@@ -66,6 +66,16 @@ CCurrencyPacket1::CCurrencyPacket1(CCharEntity* PChar)
         ref<uint16>(0x1C) = sql->GetUIntData(9);  // valor_point
         ref<uint16>(0x1E) = sql->GetUIntData(10); // scyld
 
+        // Crystal storage
+        ref<uint16>(0xE8) = sql->GetUIntData(84); // Fire Crystals
+        ref<uint16>(0xEA) = sql->GetUIntData(85); // Ice Crystals
+        ref<uint16>(0xEC) = sql->GetUIntData(86); // Wind Crystals
+        ref<uint16>(0xEE) = sql->GetUIntData(87); // Earth Crystals
+        ref<uint16>(0xF0) = sql->GetUIntData(88); // Lightning Crystals
+        ref<uint16>(0xF2) = sql->GetUIntData(89); // Water Crystals
+        ref<uint16>(0xF4) = sql->GetUIntData(90); // Light Crystals
+        ref<uint16>(0xF6) = sql->GetUIntData(91); // Dark Crystals
+
         ref<uint32>(0x20) = sql->GetIntData(11); // guild_fishing
         ref<uint32>(0x24) = sql->GetIntData(12); // guild_woodworking
         ref<uint32>(0x28) = sql->GetIntData(13); // guild_smithing
@@ -86,24 +96,30 @@ CCurrencyPacket1::CCurrencyPacket1(CCharEntity* PChar)
         ref<uint8>(0x4E)  = sql->GetUIntData(27); // light_fewell
         ref<uint8>(0x4F)  = sql->GetUIntData(28); // dark_fewell
 
+        ref<uint16>(0x5E) = sql->GetIntData(34) == -1 ? 0 : sql->GetIntData(34); // daily_tally
+
         ref<uint32>(0x50) = sql->GetIntData(29);  // ballista_point
         ref<uint32>(0x54) = sql->GetIntData(30);  // fellow_point
         ref<uint16>(0x58) = sql->GetUIntData(31); // chocobuck_sandoria
         ref<uint16>(0x5A) = sql->GetUIntData(32); // chocobuck_bastok
         ref<uint16>(0x5C) = sql->GetUIntData(33); // chocobuck_windurst
 
-        ref<uint16>(0x5E) = sql->GetIntData(34) == -1 ? 0 : sql->GetIntData(34); // daily_tally
-
         ref<uint32>(0x60) = sql->GetIntData(35);  // research_mark
         ref<uint8>(0x64)  = sql->GetUIntData(36); // tunnel_worm
         ref<uint8>(0x65)  = sql->GetUIntData(37); // morion_worm
         ref<uint8>(0x66)  = sql->GetUIntData(38); // phantom_worm
+        ref<uint8>(0xCC)  = sql->GetUIntData(71); // pheromone_sacks
         ref<uint32>(0x68) = sql->GetIntData(39);  // moblin_marble
+
+        ref<uint8>(0xBD) = sql->GetUIntData(66);  // cave_points
 
         ref<uint16>(0x6C) = sql->GetUIntData(40); // infamy
         ref<uint16>(0x6E) = sql->GetUIntData(41); // prestige
         ref<uint32>(0x70) = sql->GetIntData(42);  // legion_point
         ref<uint32>(0x74) = sql->GetIntData(43);  // spark_of_eminence
+        ref<uint16>(0xF8) = sql->GetUIntData(92); // deeds
+        ref<uint16>(0xA8) = sql->GetUIntData(56); // aman_vouchers
+        ref<uint16>(0xE0) = sql->GetUIntData(82); // reclamation_marks
         ref<uint32>(0x78) = sql->GetIntData(44);  // shining_star
 
         ref<uint32>(0x7C) = sql->GetIntData(45); // imperial_standing
@@ -112,15 +128,20 @@ CCurrencyPacket1::CCurrencyPacket1(CCharEntity* PChar)
         ref<uint32>(0x88) = sql->GetIntData(48); // lebros_assault_point
         ref<uint32>(0x8C) = sql->GetIntData(49); // periqia_assault_point
         ref<uint32>(0x90) = sql->GetIntData(50); // ilrusi_assault_point
-        ref<uint32>(0x94) = sql->GetIntData(51); // nyzul_isle_assault_point
+        ref<uint32>(0x94) = sql->GetIntData(51); // nyzul_isle_tokens
+        ref<uint8>(0xBE) = sql->GetUIntData(67); // imperial_army_id_tags
         ref<uint32>(0x98) = sql->GetIntData(52); // zeni_point
         ref<uint32>(0x9C) = sql->GetIntData(53); // jetton
         ref<uint32>(0xA0) = sql->GetIntData(54); // therion_ichor
 
-        ref<uint32>(0xA4) = sql->GetIntData(55); // allied_notes
+        // bloodshed_plans
+        // umbrage_plans
+        // ritualistic_plans
+        // tutelary_plans
+        // primacy_plans
 
-        ref<uint16>(0xA8) = sql->GetUIntData(56); // aman_vouchers
-        ref<uint16>(0xAA) = sql->GetUIntData(57); // login_points
+        ref<uint32>(0xA4) = sql->GetIntData(55); // allied_notes
+        ref<uint8>(0xBF) = sql->GetUIntData(68); // op_credits
 
         ref<uint32>(0xAC) = sql->GetIntData(58);  // cruor
         ref<uint32>(0xB0) = sql->GetIntData(59);  // resistance_credit
@@ -130,17 +151,12 @@ CCurrencyPacket1::CCurrencyPacket1(CCharEntity* PChar)
         ref<uint8>(0xBA)  = sql->GetUIntData(63); // third_echelon_trophy
         ref<uint8>(0xBB)  = sql->GetUIntData(64); // second_echelon_trophy
         ref<uint8>(0xBC)  = sql->GetUIntData(65); // first_echelon_trophy
-
-        ref<uint8>(0xBD) = sql->GetUIntData(66); // cave_points
-
-        ref<uint8>(0xBE) = sql->GetUIntData(67); // id_tags
-
-        ref<uint8>(0xBF) = sql->GetUIntData(68); // op_credits
+        // traverser_stones
 
         ref<uint32>(0xC4) = sql->GetIntData(69); // voidstones
         ref<uint32>(0xC8) = sql->GetIntData(70); // kupofried_corundums
 
-        ref<uint8>(0xCC) = sql->GetUIntData(71); // pheromone_sacks
+        ref<uint32>(0xE4) = sql->GetIntData(83); // unity_accolades
 
         ref<uint8>(0xCE) = sql->GetUIntData(72); // rems_ch1
         ref<uint8>(0xCF) = sql->GetUIntData(73); // rems_ch2
@@ -153,20 +169,7 @@ CCurrencyPacket1::CCurrencyPacket1(CCharEntity* PChar)
         ref<uint8>(0xD6) = sql->GetUIntData(80); // rems_ch9
         ref<uint8>(0xD7) = sql->GetUIntData(81); // rems_ch10
 
-        ref<uint16>(0xE0) = sql->GetUIntData(82); // reclamation_marks
-        ref<uint32>(0xE4) = sql->GetIntData(83);  // unity_accolades
-
-        // Crystal storage
-        ref<uint16>(0xE8) = sql->GetUIntData(84); // Fire Crystals
-        ref<uint16>(0xEA) = sql->GetUIntData(85); // Ice Crystals
-        ref<uint16>(0xEC) = sql->GetUIntData(86); // Wind Crystals
-        ref<uint16>(0xEE) = sql->GetUIntData(87); // Earth Crystals
-        ref<uint16>(0xF0) = sql->GetUIntData(88); // Lightning Crystals
-        ref<uint16>(0xF2) = sql->GetUIntData(89); // Water Crystals
-        ref<uint16>(0xF4) = sql->GetUIntData(90); // Light Crystals
-        ref<uint16>(0xF6) = sql->GetUIntData(91); // Dark Crystals
-
-        ref<uint16>(0xF8) = sql->GetUIntData(92); // deeds
+        ref<uint16>(0xAA) = sql->GetUIntData(57); // login_points
     }
 
     ref<uint32>(0xC0) = charutils::getAvailableTraverserStones(PChar); // traverser_stones

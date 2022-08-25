@@ -76,7 +76,23 @@ CCharStatsPacket::CCharStatsPacket(CCharEntity* PChar)
     ref<uint8>(0x50)  = PChar->profile.nation;
 
     // 0x51 = 0x01 on fresh player, 0x03 with 99
-    ref<uint8>(0x52) = PChar->getMod(Mod::SUPERIOR_LEVEL);
+    // ref<uint8>(0x52) = PChar->getMod(Mod::SUPERIOR_LEVEL);
+
+    // Unlocks Superior Level 1 after killing Absolute Virtue once
+    if (charutils::GetCharVar(PChar, "KillCounter_AbsoluteVirtue") >= 1)
+    {
+        ref<uint8>(0x52) = PChar->GetMLevel() == 99 ? 1: 0;
+    }
+    // Unlocks Superior Level 2 after defeating all T3/SR VW once
+    if (charutils::GetCharVar(PChar, "KillCounter_Akvan") >= 1 && charutils::GetCharVar(PChar, "KillCounter_Kaggen") >= 1 && charutils::GetCharVar(PChar, "KillCounter_Pil") >= 1)
+    {
+        ref<uint8>(0x52) = PChar->GetMLevel() == 99 ? 2: 0;
+    }
+    if (PChar->m_GMlevel > 0)
+    {
+        ref<uint8>(0x52) = PChar->GetMLevel() == 99 ? 5: 0;
+    }
+
     ref<uint8>(0x54) = charutils::getMaxItemLevel(PChar);        // Maximum Item Level
     ref<uint8>(0x55) = charutils::getItemLevelDifference(PChar); // itemlevel over 99
     ref<uint8>(0x56) = charutils::getMainhandItemLevel(PChar);   // Item level of Main Hand weapon

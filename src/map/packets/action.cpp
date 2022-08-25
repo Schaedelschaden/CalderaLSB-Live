@@ -369,7 +369,7 @@ CActionPacket::CActionPacket(action_t& action)
             {
                 bitOffset += 1;
             }
-            if (target.spikesEffect != SUBEFFECT_NONE)
+            if (target.spikesEffect != SUBEFFECT_NONE || target.spikesEffect != SUBEFFECT_CURSE_SPIKES)
             {
                 bitOffset = packBitsBE(data, 1, bitOffset, 1);
                 bitOffset = packBitsBE(data, target.spikesEffect, bitOffset, 10);
