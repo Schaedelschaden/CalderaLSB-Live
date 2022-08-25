@@ -170,55 +170,85 @@ uint16 CMobSkill::getAnimationID() const
 
 uint16 CMobSkill::getPetAnimationID() const
 {
-    // levi
+    // Leviathan 64-72
     if (m_AnimID >= 552 && m_AnimID <= 560)
     {
         return m_AnimID - 488;
     }
 
-    // garuda
+    // Garuda 80-88
     if (m_AnimID >= 565 && m_AnimID <= 573)
     {
         return m_AnimID - 485;
     }
 
-    // titan
+    // Titan 48-56
     if (m_AnimID >= 539 && m_AnimID <= 547)
     {
         return m_AnimID - 491;
     }
 
-    // ifrit
+    // Ifrit 32-40
     if (m_AnimID >= 526 && m_AnimID <= 534)
     {
         return m_AnimID - 494;
     }
 
-    // fenrir
+    // Fenrir 16-24
     if (m_AnimID >= 513 && m_AnimID <= 521)
     {
         return m_AnimID - 497;
     }
 
-    // shiva
+    // Shiva 96-104
     if (m_AnimID >= 578 && m_AnimID <= 586)
     {
         return m_AnimID - 482;
     }
 
-    // rumah
+    // Ramuh 112-120
     if (m_AnimID >= 591 && m_AnimID <= 599)
     {
         return m_AnimID - 479;
     }
 
-    // carbuncle
+    // Carbuncle 0-6
     if (m_AnimID >= 605 && m_AnimID <= 611)
     {
         return m_AnimID - 605;
     }
 
-    // wyvern
+    // // Diabolos
+    // if (m_AnimID >= 605 && m_AnimID <= 611)
+    // {
+        // return m_AnimID - 605;
+    // }
+
+    // // Cait Sith 9-15
+    // if (m_AnimID >= 505 && m_AnimID <= 511)
+    // {
+        // return m_AnimID - 496;
+    // }
+
+    // Siren
+    // if (m_AnimID >= 605 && m_AnimID <= 611)
+    // {
+        // return m_AnimID - 605;
+    // }
+
+    // // Alexander
+    // if (m_AnimID >= 605 && m_AnimID <= 611)
+    // {
+        // return m_AnimID - 605;
+    // }
+
+    // // Odin
+    // if (m_AnimID >= 605 && m_AnimID <= 611)
+    // {
+        // return m_AnimID - 605;
+    // }
+
+    // Wyvern 128-139
     if (m_AnimID >= 621 && m_AnimID <= 632)
     {
         return m_AnimID - 493;

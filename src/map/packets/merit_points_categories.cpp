@@ -295,8 +295,18 @@ void CMeritPointsCategoriesPacket::MeritPointsCategoriesPacket(CCharEntity* PCha
         Modus Veritas Duration (+10% per upgrade)
         Helix Magic Acc./Atk. (+3 magic accuracy and +2 magic attack bonus per upgrade)
         Max Sublimation (+10 MP available per upgrade)
-0x06 0x80 -
-0x06 0xC0 -
+0x06 0x80 - GEO - Group 1
+        Full Circle Effect (Restores up to 5% additional MP per merit)
+        Ecliptic Attrition Recast (Recast is reduced by 10 seconds per merit. Also reduces the recast time of Lasting Emanation)
+        Life Cycle Recast (Recast is reduced by 20 seconds per merit)
+        Blaze of Glory Recast (Recast is reduced by 20 seconds per merit)
+        Dematerialize Recast (Recast is reduced by 20 seconds per merit)
+0x06 0xC0 - RUN - Group 1
+        Rune Enhancement Effect (Increase potency of runes harbored by 2 points)
+        Vallation Effect (Adds an elemental damage reduction to Vallation and a magic defense bonus to Valliance of 1 point per harbored rune)
+        Lunge Effect (Increase the accuracy of Lunge by 3 points per harbored rune)
+        Pflug Effect (Enhance the likelihood of resistance activating by 1 point per harbored rune)
+        Gambit Effect (Shorten recast time by 10 seconds)
 0x08 0x00 - WAR - Group 2
         Warrior's Charge (-2 minutes 30 seconds recast per upgrade)
         Tomahawk (+15 seconds duration per upgrade)
@@ -409,4 +419,14 @@ void CMeritPointsCategoriesPacket::MeritPointsCategoriesPacket(CCharEntity* PCha
         Equanimity (Dark Arts Stratagem (requires two charges). Your next black magic spell will generate less enmity.)
         Enlightenment (Optimizes both white and black magic capabilities and allows access to both addenda for your next spell. Recast: 10min.)
         Stormsurge (Storm-type spells grant a bonus to attributes associated with their element. Initial bonus value: +3.)
+0x0D 0x40 - GEO - Group 2
+        Curative Recantation (Adds an HP recovery effect to Full Circle. Additional merits restore up to 5% additional HP)
+        Primordial Zeal (Enhances Collimated Fervor with an elemental magic casting time reduction effect. Additional merits reduce casting time by 10%)
+        Mending Halation (The Luopan will vanish and restore HP to party members within the area of effect. Additional merits increase HP recovery by 5% per merit)
+        Radial Arcana (The Luopan will vanish and restore MP to party members within the area of effect. Additional merits increase MP recovery by 3% per merit)
+0x0D 0x80 - RUN - Group 2
+        Battuta (Increases the likelihood of parrying and deals counter damage after parrying dependent upon harbored runes. +4% Parry/+4 Counter per rune harbored)
+        Rayke (Expends runes to reduce elemental resistance of the target. Increases duration of effect by 3 seconds per merit)
+        Inspiration (Grants a “Fast Cast” effect to Vallation and Valiance. Increases cast speed by 10 percent per merit)
+        Sleight of Sword (Grants a “Subtle Blow” effect during Swordplay. Increases the maximum value of Subtle Blow by 5 points per merit)
 */

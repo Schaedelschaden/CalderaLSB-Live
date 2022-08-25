@@ -29,11 +29,11 @@
 
 /************************************************************************
  *                                                                       *
- *  Две версии значений - до abyssea и после                             *
+ *  Two versions of values ​​- Before Abyssea and after                    *
  *                                                                       *
  ************************************************************************/
 
-// массив больше на одно значение, заполняемое нулем
+// The array is one more value filled with zero
 
 static uint8 upgrade[10][45] = {
     { 1, 2, 3, 4, 5, 5, 5, 5, 5, 7, 7, 7, 9, 9, 9 },           // HP-MP
@@ -48,16 +48,16 @@ static uint8 upgrade[10][45] = {
     { 1, 3, 5, 7, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39,
       42, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 48, 48, 48,
       48, 48, 48, 48, 48, 48, 48, 51, 51, 51, 51, 51, 51, 51,
-      51, 51 } // Max merits
+      51, 51 }                                                 // Max merits
 };
 
-#define MAX_LIMIT_POINTS 10000 // количество опыта для получения одного merit
+#define MAX_LIMIT_POINTS 10000 // Number of experience points to get one merit
 
-// TODO: скорее всего придется все это перенести в базу
+// TODO: Need to transfer all this to the database?
 
 /************************************************************************
  *                                                                       *
- *  Ограничение количества усилений metir                                *
+ *  Caps the total number of merits per category                         *
  *                                                                       *
  ************************************************************************/
 
@@ -79,15 +79,15 @@ static uint8 cap[100] = {
 
 /************************************************************************
  *                                                                       *
- *  Количество элементов в каждой из категорий                           *
+ *  Number of items in each category                                     *
  *                                                                       *
  ************************************************************************/
 
 struct MeritCategoryInfo_t
 {
-    int8  MeritsInCat; // number of elements in a group
-    uint8 MaxPoints;   // the maximum number of points that can be put into a group
-    uint8 UpgradeID;   // group index in upgrade array
+    int8  MeritsInCat; // Number of elements in a group
+    uint8 MaxPoints;   // Maximum number of points that can be put into a group
+    uint8 UpgradeID;   // Group index in upgrade array
 };
 
 static const MeritCategoryInfo_t meritCatInfo[] = {
@@ -97,65 +97,65 @@ static const MeritCategoryInfo_t meritCatInfo[] = {
     { 14, 112, 4 }, // MCATEGORY_MAGIC       catNumber 03
     { 5, 10, 5 },   // MCATEGORY_OTHERS      catNumber 04
 
-    { 5, 10, 6 }, // MCATEGORY_WAR_1       catNumber 05
-    { 5, 10, 6 }, // MCATEGORY_MNK_1       catNumber 06
-    { 5, 10, 6 }, // MCATEGORY_WHM_1       catNumber 07
-    { 7, 10, 6 }, // MCATEGORY_BLM_1       catNumber 08
-    { 7, 10, 6 }, // MCATEGORY_RDM_1       catNumber 09
-    { 5, 10, 6 }, // MCATEGORY_THF_1       catNumber 10
-    { 5, 10, 6 }, // MCATEGORY_PLD_1       catNumber 11
-    { 5, 10, 6 }, // MCATEGORY_DRK_1       catNumber 12
-    { 5, 10, 6 }, // MCATEGORY_BST_1       catNumber 13
-    { 5, 10, 6 }, // MCATEGORY_BRD_1       catNumber 14
-    { 5, 10, 6 }, // MCATEGORY_RNG_1       catNumber 15
-    { 5, 10, 6 }, // MCATEGORY_SAM_1       catNumber 16
-    { 7, 10, 6 }, // MCATEGORY_NIN_1       catNumber 17
-    { 5, 10, 6 }, // MCATEGORY_DRG_1       catNumber 18
-    { 5, 10, 6 }, // MCATEGORY_SMN_1       catNumber 19
-    { 5, 10, 6 }, // MCATEGORY_BLU_1       catNumber 20
-    { 5, 10, 6 }, // MCATEGORY_COR_1       catNumber 21
-    { 5, 10, 6 }, // MCATEGORY_PUP_1       catNumber 22
-    { 4, 10, 6 }, // MCATEGORY_DNC_1       catNumber 23
-    { 4, 10, 6 }, // MCATEGORY_SCH_1       catNumber 24
+    { 5, 10, 6 },   // MCATEGORY_WAR_1       catNumber 05
+    { 5, 10, 6 },   // MCATEGORY_MNK_1       catNumber 06
+    { 5, 10, 6 },   // MCATEGORY_WHM_1       catNumber 07
+    { 7, 10, 6 },   // MCATEGORY_BLM_1       catNumber 08
+    { 7, 10, 6 },   // MCATEGORY_RDM_1       catNumber 09
+    { 5, 10, 6 },   // MCATEGORY_THF_1       catNumber 10
+    { 5, 10, 6 },   // MCATEGORY_PLD_1       catNumber 11
+    { 5, 10, 6 },   // MCATEGORY_DRK_1       catNumber 12
+    { 5, 10, 6 },   // MCATEGORY_BST_1       catNumber 13
+    { 5, 10, 6 },   // MCATEGORY_BRD_1       catNumber 14
+    { 5, 10, 6 },   // MCATEGORY_RNG_1       catNumber 15
+    { 5, 10, 6 },   // MCATEGORY_SAM_1       catNumber 16
+    { 7, 10, 6 },   // MCATEGORY_NIN_1       catNumber 17
+    { 5, 10, 6 },   // MCATEGORY_DRG_1       catNumber 18
+    { 5, 10, 6 },   // MCATEGORY_SMN_1       catNumber 19
+    { 5, 10, 6 },   // MCATEGORY_BLU_1       catNumber 20
+    { 5, 10, 6 },   // MCATEGORY_COR_1       catNumber 21
+    { 5, 10, 6 },   // MCATEGORY_PUP_1       catNumber 22
+    { 4, 10, 6 },   // MCATEGORY_DNC_1       catNumber 23
+    { 4, 10, 6 },   // MCATEGORY_SCH_1       catNumber 24
 
-    { 14, 15, 8 }, // MCATEGORY_WS          catNumber 25
+    { 14, 15, 8 },  // MCATEGORY_WS          catNumber 25
 
-    { 5, 10, 6 }, // MCATEGORY_GEO_1       catNumber 26
-    { 5, 10, 6 }, // MCATEGORY_RUN_1       catNumber 27
+    { 5, 10, 6 },   // MCATEGORY_GEO_1       catNumber 26
+    { 5, 10, 6 },   // MCATEGORY_RUN_1       catNumber 27
 
-    { 0, 0, 8 }, // MCATEGORY_UNK_0       catNumber 28
-    { 0, 0, 8 }, // MCATEGORY_UNK_1       catNumber 29
-    { 0, 0, 8 }, // MCATEGORY_UNK_2       catNumber 30
+    { 0, 0, 8 },    // MCATEGORY_UNK_0       catNumber 28
+    { 0, 0, 8 },    // MCATEGORY_UNK_1       catNumber 29
+    { 0, 0, 8 },    // MCATEGORY_UNK_2       catNumber 30
 
-    { 4, 10, 7 },  // MCATEGORY_WAR_2       catNumber 31
-    { 4, 10, 7 },  // MCATEGORY_MNK_2       catNumber 32
-    { 6, 10, 7 },  // MCATEGORY_WHM_2       catNumber 33
-    { 12, 10, 7 }, // MCATEGORY_BLM_2       catNumber 34
-    { 12, 10, 7 }, // MCATEGORY_RDM_2       catNumber 35
-    { 4, 10, 7 },  // MCATEGORY_THF_2       catNumber 36
-    { 4, 10, 7 },  // MCATEGORY_PLD_2       catNumber 37
-    { 4, 10, 7 },  // MCATEGORY_DRK_2       catNumber 38
-    { 4, 10, 7 },  // MCATEGORY_BST_2       catNumber 39
-    { 6, 10, 7 },  // MCATEGORY_BRD_2       catNumber 40
-    { 4, 10, 7 },  // MCATEGORY_RNG_2       catNumber 41
-    { 4, 10, 7 },  // MCATEGORY_SAM_2       catNumber 42
-    { 12, 10, 7 }, // MCATEGORY_NIN_2       catNumber 43
-    { 4, 10, 7 },  // MCATEGORY_DRG_2       catNumber 44
-    { 6, 10, 7 },  // MCATEGORY_SMN_2       catNumber 45
-    { 4, 10, 7 },  // MCATEGORY_BLU_2       catNumber 46
-    { 4, 10, 7 },  // MCATEGORY_COR_2       catNumber 47
-    { 4, 10, 7 },  // MCATEGORY_PUP_2       catNumber 48
-    { 4, 10, 7 },  // MCATEGORY_DNC_2       catNumber 49
-    { 6, 10, 7 },  // MCATEGORY_SHC_2       catNumber 50
+    { 4, 10, 7 },   // MCATEGORY_WAR_2       catNumber 31
+    { 4, 10, 7 },   // MCATEGORY_MNK_2       catNumber 32
+    { 6, 10, 7 },   // MCATEGORY_WHM_2       catNumber 33
+    { 12, 10, 7 },  // MCATEGORY_BLM_2       catNumber 34
+    { 12, 10, 7 },  // MCATEGORY_RDM_2       catNumber 35
+    { 4, 10, 7 },   // MCATEGORY_THF_2       catNumber 36
+    { 4, 10, 7 },   // MCATEGORY_PLD_2       catNumber 37
+    { 4, 10, 7 },   // MCATEGORY_DRK_2       catNumber 38
+    { 4, 10, 7 },   // MCATEGORY_BST_2       catNumber 39
+    { 6, 10, 7 },   // MCATEGORY_BRD_2       catNumber 40
+    { 4, 10, 7 },   // MCATEGORY_RNG_2       catNumber 41
+    { 4, 10, 7 },   // MCATEGORY_SAM_2       catNumber 42
+    { 12, 10, 7 },  // MCATEGORY_NIN_2       catNumber 43
+    { 4, 10, 7 },   // MCATEGORY_DRG_2       catNumber 44
+    { 6, 10, 7 },   // MCATEGORY_SMN_2       catNumber 45
+    { 4, 10, 7 },   // MCATEGORY_BLU_2       catNumber 46
+    { 4, 10, 7 },   // MCATEGORY_COR_2       catNumber 47
+    { 4, 10, 7 },   // MCATEGORY_PUP_2       catNumber 48
+    { 4, 10, 7 },   // MCATEGORY_DNC_2       catNumber 49
+    { 6, 10, 7 },   // MCATEGORY_SHC_2       catNumber 50
 
-    { 0, 0, 7 }, // MCATEGORY_UNK_3       catNumber 51
+    { 0, 0, 7 },    // MCATEGORY_UNK_3       catNumber 51
 
-    { 4, 10, 7 }, // MCATEGORY_GEO_2       catNumber 52
-    { 4, 10, 7 }, // MCATEGORY_RUN_2       catNumber 53
+    { 4, 10, 7 },   // MCATEGORY_GEO_2       catNumber 52
+    { 4, 10, 7 },   // MCATEGORY_RUN_2       catNumber 53
 };
 
-#define GetMeritCategory(merit) (((merit) >> 6) - 1)  // get category from merit
-#define GetMeritID(merit)       (((merit)&0x3F) >> 1) // get the offset in the category from merit
+#define GetMeritCategory(merit) (((merit) >> 6) - 1)  // Get category from merit
+#define GetMeritID(merit)       (((merit)&0x3F) >> 1) // Get the offset in the category from merit
 
 /************************************************************************
  *                                                                       *
@@ -295,7 +295,7 @@ uint8 CMeritPoints::GetMeritPoints() const
  *                                                                       *
  ************************************************************************/
 
-// true - если merit был добавлен
+// True if merit was added
 
 bool CMeritPoints::AddLimitPoints(uint16 points)
 {
@@ -303,7 +303,7 @@ bool CMeritPoints::AddLimitPoints(uint16 points)
 
     if (m_LimitPoints >= MAX_LIMIT_POINTS)
     {
-        // check if player has reached cap
+        // Check if player has reached cap
         if (m_MeritPoints == settings::get<uint8>("map.MAX_MERIT_POINTS") + GetMeritValue(MERIT_MAX_MERIT, m_PChar))
         {
             m_LimitPoints = MAX_LIMIT_POINTS - 1;
@@ -325,7 +325,7 @@ bool CMeritPoints::AddLimitPoints(uint16 points)
 
 /************************************************************************
  *                                                                       *
- *  set limit points                                                        *
+ *  Set limit points                                                     *
  *                                                                       *
  ************************************************************************/
 
@@ -336,7 +336,7 @@ void CMeritPoints::SetLimitPoints(uint16 points)
 
 /************************************************************************
  *                                                                       *
- *  set merit points                                                        *
+ *  Set merit points                                                     *
  *                                                                       *
  ************************************************************************/
 
@@ -347,8 +347,8 @@ void CMeritPoints::SetMeritPoints(uint16 points)
 
 /************************************************************************
  *                                                                       *
- *  Проверяем наличие merit. Необходимо использовать лишь в случае       *
- *  получения meritid от персонажа                                       *
+ *  Check the presence of a merit. Must be used only if                  *
+ *  receiving meritid from a character                                   *
  *                                                                       *
  ************************************************************************/
 
@@ -373,7 +373,7 @@ bool CMeritPoints::IsMeritExist(MERIT_TYPE merit)
 
 /************************************************************************
  *                                                                       *
- *  Получаем указатель на искомый const merit                            *
+ *  Get a pointer to the desired const merit                             *
  *                                                                       *
  ************************************************************************/
 
@@ -384,7 +384,7 @@ const Merit_t* CMeritPoints::GetMerit(MERIT_TYPE merit)
 
 /************************************************************************
  *                                                                       *
- *  Получаем указатель на искомый const merit по индексу                 *
+ *  Get a pointer to the desired const merit by index                    *
  *                                                                       *
  ************************************************************************/
 
@@ -397,7 +397,7 @@ const Merit_t* CMeritPoints::GetMeritByIndex(uint16 index)
 
 /************************************************************************
  *                                                                       *
- *  Получаем указатель на искомый merit                                  *
+ *  Get the pointer to the desired merit                                 *
  *                                                                       *
  ************************************************************************/
 
@@ -469,7 +469,7 @@ void CMeritPoints::LowerMerit(MERIT_TYPE merit)
 
 /************************************************************************
  *                                                                       *
- *  get next merit upgrade                                              *
+ *  Get next merit upgrade                                              *
  *                                                                       *
  ************************************************************************/
 
@@ -480,7 +480,7 @@ void CMeritPoints::LowerMerit(MERIT_TYPE merit)
 
 /************************************************************************
  *                                                                       *
- *  Получаем текущее значение указанного merit                           *
+ *  Get the current value of the specified merit                         *
  *                                                                       *
  ************************************************************************/
 
@@ -497,7 +497,7 @@ int32 CMeritPoints::GetMeritValue(MERIT_TYPE merit, CCharEntity* PChar)
         }
 
         if (PMerit->catid == 25 && PChar->GetMLevel() < 96)
-        { // categoryID 25 is for merit weaponskills, which only apply if the player is lv 96+
+        { // CategoryID 25 is for merit weaponskills, which only apply if the player is lv 96+
             meritValue = 0;
         }
 
@@ -509,18 +509,18 @@ int32 CMeritPoints::GetMeritValue(MERIT_TYPE merit, CCharEntity* PChar)
 
 /************************************************************************
  *                                                                       *
- *  Реализация namespase для работы с Linkshells                         *
+ *  Implementing namespace for working with Linkshells                   *
  *                                                                       *
  ************************************************************************/
 
 namespace meritNameSpace
 {
-    Merit_t GMeritsTemplate[MERITS_COUNT]         = {};    // global list of merits and their properties
-    int16   groupOffset[MCATEGORY_COUNT / 64 - 1] = { 0 }; // the first merit offset of each catagory
+    Merit_t GMeritsTemplate[MERITS_COUNT]         = {};    // Global list of merits and their properties
+    int16   groupOffset[MCATEGORY_COUNT / 64 - 1] = { 0 }; // The first merit offset of each catagory
 
     /************************************************************************
      *                                                                       *
-     *  Загружаем шаблон массива merits  /   Load pattern array merits       *
+     *  Loading the merits array template  /   Load pattern array merits     *
      *                                                                       *
      ************************************************************************/
 
@@ -532,18 +532,18 @@ namespace meritNameSpace
 
         if (ret != SQL_ERROR && sql->NumRows() != MERITS_COUNT)
         {
-            // issue with unknown catagories causing massive confusion
+            // Issue with unknown catagories causing massive confusion
 
-            uint16 index            = 0; // global merit template count (to 255)
-            uint8  catIndex         = 0; // global merit catagory count (to 51)
-            int8   previousCatIndex = 0; // will be set on every loop, used for detecting a catagory change
-            int8   catMeritIndex    = 0; // counts number of merits in a catagory
+            uint16 index            = 0; // Global merit template count (to 255)
+            uint8  catIndex         = 0; // Global merit catagory count (to 51)
+            int8   previousCatIndex = 0; // Will be set on every loop, used for detecting a catagory change
+            int8   catMeritIndex    = 0; // Counts number of merits in a catagory
 
             while (sql->NextRow() == SQL_SUCCESS)
             {
-                Merit_t Merit = {}; // creat a new merit template.
+                Merit_t Merit = {}; // Create a new merit template.
 
-                Merit.id        = sql->GetUIntData(0); // set data from db.
+                Merit.id        = sql->GetUIntData(0); // Set data from db
                 Merit.value     = sql->GetUIntData(1);
                 Merit.jobs      = sql->GetUIntData(2);
                 Merit.upgrade   = sql->GetUIntData(3);
@@ -552,27 +552,27 @@ namespace meritNameSpace
                 Merit.next      = upgrade[Merit.upgradeid][0];
                 Merit.spellid   = sql->GetUIntData(6);
 
-                GMeritsTemplate[index] = Merit; // add the merit to the array
+                GMeritsTemplate[index] = Merit; // Add the merit to the array
 
-                previousCatIndex = Merit.catid; // previousCatIndex is set on everyloop to detect a catogory change.
+                previousCatIndex = Merit.catid; // previousCatIndex is set on everyloop to detect a catogory change
 
-                if (previousCatIndex != catIndex) // check for catagory change.
+                if (previousCatIndex != catIndex) // Check for catagory change.
                 {
-                    groupOffset[catIndex] = index - catMeritIndex; // set index offset, first merit of each group.
-                    catIndex++;                                    // now on next catagory.
-                    catMeritIndex = 0;                             // reset the merit catagory count to 0.
+                    groupOffset[catIndex] = index - catMeritIndex; // Set index offset, first merit of each group
+                    catIndex++;                                    // Now on next catagory
+                    catMeritIndex = 0;                             // Reset the merit catagory count to 0
 
                     if (previousCatIndex != catIndex)
-                    { // this deals with the problem with unknown catagories.
+                    { // This deals with the problem with unknown catagories
                         catIndex = previousCatIndex;
                     }
                 }
 
-                catMeritIndex++; // next index within catagory.
-                index++;         // next global template index.
+                catMeritIndex++; // Next index within category
+                index++;         // Next global template index
             }
 
-            groupOffset[catIndex] = index - catMeritIndex; // add the last offset manually since loop finishes before hand.
+            groupOffset[catIndex] = index - catMeritIndex; // Add the last offset manually since loop finishes before hand.
 
             /* ret = sql->Query("SELECT meritid, spellid FROM merits INNER JOIN spell_list ON merits.name = spell_list.name");
 

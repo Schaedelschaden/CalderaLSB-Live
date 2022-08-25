@@ -135,6 +135,8 @@ enum MSGBASIC_ID : uint16
     MSGBASIC_COUNTER_ABS_BY_SHADOW = 14,  /* The <player>'s attack is countered by the <target>. .. of <player>'s shadows absorbs the damage and disappears. */
     /* THF */
     MSGBASIC_TREASURE_HUNTER_UP = 603, /* Additional effect: Treasure Hunter effectiveness against <target> increases to .. */
+    /* RNG */
+    MSGBASIC_ABILITY_TH         = 608, /* <player> uses <ability>. Treasure Hunter effectiveness against <target> increases to <number>. */
     /* DNC */
     MSGBASIC_NO_FINISHINGMOVES = 524,
     /* TRUST & ALTER EGO */

@@ -302,6 +302,12 @@ bool CStatusEffectContainer::CanGainStatusEffect(CStatusEffect* PStatusEffect)
                 return false;
             }
             break;
+        case EFFECT_GEO_WEIGHT:
+            if (m_POwner->hasImmunity(IMMUNITY_GRAVITY))
+            {
+                return false;
+            }
+            break;
         case EFFECT_BIND:
             if (m_POwner->hasImmunity(IMMUNITY_BIND))
             {
@@ -326,6 +332,12 @@ bool CStatusEffectContainer::CanGainStatusEffect(CStatusEffect* PStatusEffect)
                 return false;
             }
             break;
+        case EFFECT_GEO_PARALYSIS:
+            if (m_POwner->hasImmunity(IMMUNITY_PARALYZE))
+            {
+                return false;
+            }
+            break;
         case EFFECT_BLINDNESS:
             if (m_POwner->hasImmunity(IMMUNITY_BLIND))
             {
@@ -338,7 +350,19 @@ bool CStatusEffectContainer::CanGainStatusEffect(CStatusEffect* PStatusEffect)
                 return false;
             }
             break;
+        case EFFECT_GEO_SLOW:
+            if (m_POwner->hasImmunity(IMMUNITY_SLOW))
+            {
+                return false;
+            }
+            break;
         case EFFECT_POISON:
+            if (m_POwner->hasImmunity(IMMUNITY_POISON))
+            {
+                return false;
+            }
+            break;
+        case EFFECT_GEO_POISON:
             if (m_POwner->hasImmunity(IMMUNITY_POISON))
             {
                 return false;
@@ -1882,13 +1906,22 @@ void CStatusEffectContainer::TickRegen(time_point tick)
         int16 poison  = m_POwner->getMod(Mod::REGEN_DOWN);
         int16 refresh = m_POwner->getMod(Mod::REFRESH) - m_POwner->getMod(Mod::REFRESH_DOWN);
         int16 regain  = m_POwner->getMod(Mod::REGAIN) - m_POwner->getMod(Mod::REGAIN_DOWN);
-        m_POwner->addHP(regen);
+
+        if (!m_POwner->StatusEffectContainer->HasStatusEffect(EFFECT_CURSE_II))
+        {
+            m_POwner->addHP(regen);
+        }
 
         if (poison)
         {
             int16 damage = battleutils::HandleStoneskin(m_POwner, poison);
 
-            if (damage > 0)
+            if (damage > 0 && m_POwner->StatusEffectContainer->HasStatusEffect(EFFECT_NIGHTMARE))
+            {
+                DelStatusEffectSilent(EFFECT_HEALING);
+                m_POwner->takeDamage(damage);
+            }
+            else
             {
                 DelStatusEffectSilent(EFFECT_HEALING);
                 m_POwner->takeDamage(damage);
@@ -1911,7 +1944,6 @@ void CStatusEffectContainer::TickRegen(time_point tick)
                     if (m_POwner->PPet->objtype == TYPE_PET)
                     {
                         CPetEntity* PPet  = (CPetEntity*)m_POwner->PPet;
-                        CItem*      hands = PChar->getEquip(SLOT_HANDS);
 
                         if (PChar->StatusEffectContainer->HasStatusEffect(EFFECT_AVATARS_FAVOR) &&
                             ((PPet->m_PetID >= PETID_CARBUNCLE && PPet->m_PetID <= PETID_CAIT_SITH) || PPet->m_PetID == PETID_SIREN))
@@ -1919,8 +1951,8 @@ void CStatusEffectContainer::TickRegen(time_point tick)
                             perpetuation = static_cast<int16>(perpetuation * 1.2);
                         }
 
-                        // carbuncle mitts only work on carbuncle
-                        if (hands && hands->getID() == 14062 && PPet->m_PetID == PETID_CARBUNCLE)
+                        // Carbuncle Mitts, Asteria Mitts, and Asteria Mitts +1 only work on Carbuncle
+                        if (m_POwner->getMod(Mod::HALVE_CARBUNCLE_PERP) > 0 && PPet->m_PetID == PETID_CARBUNCLE)
                         {
                             perpetuation /= 2;
                         }
@@ -1948,7 +1980,10 @@ void CStatusEffectContainer::TickRegen(time_point tick)
         }
         else
         {
-            m_POwner->addMP(refresh);
+            if (!m_POwner->StatusEffectContainer->HasStatusEffect(EFFECT_CURSE_II))
+            {
+                m_POwner->addMP(refresh);
+            }
         }
 
         m_POwner->addTP(regain);
