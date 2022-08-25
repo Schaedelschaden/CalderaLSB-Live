@@ -27,8 +27,8 @@ local minionGroup =
 
 m:addOverride(string.format("xi.zones.AlTaieu.mobs.%s.onMobEngaged", mobToReplaceName), function(mob, target)
     mob:hideName(false)
-    mob:untargetable(false)
-    mob:AnimationSub(2)
+    mob:setUntargetable(false)
+    mob:setAnimationSub(2)
 end)
 
 m:addOverride(string.format("xi.zones.AlTaieu.mobs.%s.onMobFight", mobToReplaceName), function(mob, target)
