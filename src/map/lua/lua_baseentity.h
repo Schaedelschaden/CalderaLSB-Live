@@ -166,6 +166,7 @@ public:
     bool  isInfront(CLuaBaseEntity const* target, sol::object const& angleArg); // true if you're infront of the input target
     bool  isBehind(CLuaBaseEntity const* target, sol::object const& angleArg);  // true if you're behind the input target
     bool  isBeside(CLuaBaseEntity const* target, sol::object const& angleArg);  // true if you're to the side of the input target
+    uint8 getCardinalQuadrant(CLuaBaseEntity const* target);                    // returns a quadrant of a cardinal direction based on the entity around a target.
 
     auto   getZone(sol::object const& arg0) -> std::optional<CLuaZone>; // Get Entity zone
     uint16 getZoneID();                                                 // Get Entity zone ID
@@ -208,6 +209,7 @@ public:
     // Items
     uint16 getEquipID(SLOTTYPE slot);                              // Gets the Item Id of the item in specified slot
     auto   getEquippedItem(uint8 slot) -> std::optional<CLuaItem>; // Returns the item object from specified slot
+    int32  getAmmoQuantity();                                      // Returns the quantity of an item equipped in the player's ammunition slot
     bool   hasItem(uint16 itemID, sol::object const& location);    // Check to see if Entity has item in inventory (hasItem(itemNumber))
     bool   addItem(sol::variadic_args va);                         // Add item to Entity inventory (additem(itemNumber,quantity))
     bool   delItem(uint16 itemID, int32 quantity, sol::object const& containerID);
@@ -216,6 +218,13 @@ public:
     bool   hasWornItem(uint16 itemID);                                                      // Check if the item is already worn (player:hasWornItem(itemid))
     void   createWornItem(uint16 itemID);                                                   // Update this item in worn item (player:createWornItem(itemid))
     auto   findItem(uint16 itemID, sol::object const& location) -> std::optional<CLuaItem>; // Like hasItem, but returns the item object (nil if not found)
+
+    uint32 getItemMod(uint32 itemID, uint16 modID);   // Checks the provided item ID for the specified mod and returns its value if found
+    uint32 getGearSlot(uint32 itemID);                // Checks the provided item ID for the slot it equips to and returns a tpz.slot
+    auto   getGearName(uint32 itemID) -> std::string; // Get item name from database using item id
+    uint32 getGearILvl(uint32 itemID);                // Get item level from database using item id
+
+    // auto  getAutomatonName() -> const char*;
 
     void createShop(uint8 size, sol::object const& arg1);                                               // Prepare the container for work of shop ??
     void addShopItem(uint16 itemID, double rawPrice, sol::object const& arg2, sol::object const& arg3); // Adds item to shop container (16 max)
@@ -629,6 +638,10 @@ public:
     uint8 getOverloadChance(uint8 element);
     void  setStatDebilitation(uint16 statDebil);
 
+    // Hit Rate Calculation
+    uint8 getHitRate(CLuaBaseEntity* PLuaBaseEntity, uint8 attackNumber, int8 bonusACC);    // Calculates Melee Hit Rate based off attacker accuracy and defender evasion
+    uint8 getRangedHitRate(CLuaBaseEntity* PLuaBaseEntity, bool isBarrage, int8 bonusRACC); // Calculates Ranged Hit Rate based off attacker accuracy and defender evasion
+
     // Damage Calculation
     uint16 getStat(uint16 statId); // STR,DEX,VIT,AGI,INT,MND,CHR,ATT,DEF
     uint16 getACC();
@@ -637,6 +650,7 @@ public:
     uint16 getRATT();
     uint16 getILvlMacc();
     uint16 getILvlSkill();
+    uint16 getILvlParry(); // Get char ILvl Parry skill of all items currently equipped
     bool   isSpellAoE(uint16 spellId);
 
     int32 physicalDmgTaken(double damage, sol::variadic_args va);
@@ -806,6 +820,7 @@ public:
     uint16 getDespoilDebuff(uint16 itemID);                                              // gets the status effect id to apply to the mob on successful despoil
     bool   itemStolen();                                                                 // sets mob's ItemStolen var = true
     int16  getTHlevel();                                                                 // Returns the Monster's current Treasure Hunter Tier
+    void   setTHlevel(uint8 thLevel);                                                    // Sets the Monster's current Treasure Hunter Tier to the provided integer
     void   addDropListModification(uint16 id, uint16 newRate, sol::variadic_args va);    // Adds a modification to the drop list of this mob, erased on death
 
     uint32 getAvailableTraverserStones();

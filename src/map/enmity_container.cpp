@@ -425,7 +425,7 @@ void CEnmityContainer::UpdateEnmityFromDamage(CBattleEntity* PEntity, int32 Dama
         lvlScalingFactor = 0.15;
     }
 
-    if (charutils::GetCharVar((CCharEntity*)PEntity, "AuditEnmity") == 1)
+    if (PEntity->objtype == TYPE_PC && charutils::GetCharVar((CCharEntity*)PEntity, "AuditEnmity") == 1)
     {
         lvlScalingFactor += (charutils::GetCharVar((CCharEntity*)PEntity, "EnmityMult") / 10);
     }
@@ -433,7 +433,7 @@ void CEnmityContainer::UpdateEnmityFromDamage(CBattleEntity* PEntity, int32 Dama
     int32 CE = (int32)(((80.f / damageMod) * Damage) * lvlScalingFactor);
     int32 VE = (int32)(((240.f / damageMod) * Damage) * lvlScalingFactor);
 
-    if (charutils::GetCharVar((CCharEntity*)PEntity, "AuditEnmity") == 1)
+    if (PEntity->objtype == TYPE_PC && charutils::GetCharVar((CCharEntity*)PEntity, "AuditEnmity") == 1)
     {
         printf("enmity_container.cpp UpdateEnmityFromDamage  PLAYER: [%s]  DMG: [%i]  DMG MOD: [%i]  MOB LVL: [%i]  SCALING FACTOR: [%f]  CE: [%i]  VE: [%i]\n", PEntity->GetName(), Damage, damageMod, level, lvlScalingFactor, CE, VE);
     }

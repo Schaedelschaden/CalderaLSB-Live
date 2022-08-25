@@ -118,6 +118,11 @@ void CLuaAbility::setRange(float range)
     m_PLuaAbility->setRange(range);
 }
 
+uint16 CLuaAbility::getTotalTargets()
+{
+    return m_PLuaAbility->getTotalTargets();
+}
+
 //==========================================================//
 
 void CLuaAbility::Register()
@@ -139,6 +144,7 @@ void CLuaAbility::Register()
     SOL_REGISTER("getVE", CLuaAbility::getVE);
     SOL_REGISTER("setVE", CLuaAbility::setVE);
     SOL_REGISTER("setRange", CLuaAbility::setRange);
+    SOL_REGISTER("getTotalTargets", CLuaAbility::getTotalTargets);
 }
 
 std::ostream& operator<<(std::ostream& os, const CLuaAbility& ability)
