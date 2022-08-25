@@ -4942,120 +4942,120 @@ namespace luautils
         return id;
     }
 
-	// Send a message to the entire server (intended to be used with server kill counters/messages in scripts)
-	// Also used in the !msgserver command
-	void SendServerMsg(CLuaBaseEntity* PLuaBaseEntity, uint8 channel, std::string msg) // SendServerMsg(player, channel, message)
-	{
+    // Send a message to the entire server (intended to be used with server kill counters/messages in scripts)
+    // Also used in the !msgserver command
+    void SendServerMsg(CLuaBaseEntity* PLuaBaseEntity, uint8 channel, std::string msg) // SendServerMsg(player, channel, message)
+    {
         CCharEntity* PChar = dynamic_cast<CCharEntity*>(PLuaBaseEntity->GetBaseEntity());
 
-		if (channel == 0)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_SAY, msg));
-		}
-		else if (channel == 1)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_SHOUT, msg));
-		}
-		else if (channel == 2)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_UNKNOWN, msg));
-		}
-		else if (channel == 3)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_TELL, msg));
-		}
-		else if (channel == 4)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_PARTY, msg));
-		}
-		else if (channel == 5)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_LINKSHELL, msg));
-		}
-		else if (channel == 6)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_SYSTEM_1, msg));
-		}
-		else if (channel == 7)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_SYSTEM_2, msg));
-		}
-		else if (channel == 8)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_EMOTION, msg));
-		}
-		else if (channel == 13)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_SAY, msg));
-		}
-		else if (channel == 14)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_SHOUT, msg));
-		}
-		else if (channel == 15)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_PARTY, msg));
-		}
-		else if (channel == 16)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_LINKSHELL, msg));
-		}
-		else if (channel == 26)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_YELL, msg));
-		}
-		else if (channel == 27)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_LINKSHELL2, msg));
-		}
-		else if (channel == 28)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_LINKSHELL2, msg));
-		}
-		else if (channel == 29)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_SYSTEM_3, msg));
-		}
-		else if (channel == 30)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_LINKSHELL3, msg));
-		}
-		else if (channel == 31)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_LINKSHELL3, msg));
-		}
-		else if (channel == 32)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_UNKNOWN_32, msg));
-		}
-		else if (channel == 33)
-		{
-			message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_UNITY, msg));
-		}
-	}
+        if (channel == 0)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_SAY, msg));
+        }
+        else if (channel == 1)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_SHOUT, msg));
+        }
+        else if (channel == 2)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_UNKNOWN, msg));
+        }
+        else if (channel == 3)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_TELL, msg));
+        }
+        else if (channel == 4)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_PARTY, msg));
+        }
+        else if (channel == 5)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_LINKSHELL, msg));
+        }
+        else if (channel == 6)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_SYSTEM_1, msg));
+        }
+        else if (channel == 7)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_SYSTEM_2, msg));
+        }
+        else if (channel == 8)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_EMOTION, msg));
+        }
+        else if (channel == 13)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_SAY, msg));
+        }
+        else if (channel == 14)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_SHOUT, msg));
+        }
+        else if (channel == 15)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_PARTY, msg));
+        }
+        else if (channel == 16)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_LINKSHELL, msg));
+        }
+        else if (channel == 26)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_YELL, msg));
+        }
+        else if (channel == 27)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_LINKSHELL2, msg));
+        }
+        else if (channel == 28)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_LINKSHELL2, msg));
+        }
+        else if (channel == 29)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_SYSTEM_3, msg));
+        }
+        else if (channel == 30)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_LINKSHELL3, msg));
+        }
+        else if (channel == 31)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_NS_LINKSHELL3, msg));
+        }
+        else if (channel == 32)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_UNKNOWN_32, msg));
+        }
+        else if (channel == 33)
+        {
+            message::send(MSG_CHAT_SERVMES, 0, 0, new CChatMessagePacket(PChar, MESSAGE_UNITY, msg));
+        }
+    }
 
-	// Force the pet to play an animation (developed to circumvent the animation issues with Cait Sith)
-	void PlayPetAnimation(CLuaBaseEntity* PLuaBaseEntityPet, CLuaBaseEntity* PLuaBaseEntityTarget, uint8 actionType, uint32 animationID) // PlayPetAnimation(pet, target, actionType, animationID)
-	{
+    // Force the pet to play an animation (developed to circumvent the animation issues with Cait Sith)
+    void PlayPetAnimation(CLuaBaseEntity* PLuaBaseEntityPet, CLuaBaseEntity* PLuaBaseEntityTarget, uint8 actionType, uint32 animationID) // PlayPetAnimation(pet, target, actionType, animationID)
+    {
         CPetEntity*    PPet    = dynamic_cast<CPetEntity*>(PLuaBaseEntityPet->GetBaseEntity());
         CBattleEntity* PTarget = dynamic_cast<CBattleEntity*>(PLuaBaseEntityTarget->GetBaseEntity());
 
-		action_t action;
-		if (actionType == 11 || actionType == 0)
-		{
-			action.actiontype = ACTION_MOBABILITY_FINISH;
-		}
-		else if (actionType == 13)
-		{
-			action.actiontype = ACTION_PET_MOBABILITY_FINISH;
-		}
+        action_t action;
+        if (actionType == 11 || actionType == 0)
+        {
+            action.actiontype = ACTION_MOBABILITY_FINISH;
+        }
+        else if (actionType == 13)
+        {
+            action.actiontype = ACTION_PET_MOBABILITY_FINISH;
+        }
 
-		action.id              = PPet->id;
-		actionList_t& list     = action.getNewActionList();
-		list.ActionTargetID    = PTarget->id;
-		actionTarget_t& target = list.getNewActionTarget();
-		target.animation       = animationID; // Sets the animation ID
-		target.param           = 2582;
-		PPet->loc.zone->PushPacket(PPet, CHAR_INRANGE, new CActionPacket(action)); // Pushes new action packet to anyone within range of the triggering location
-	}
+        action.id              = PPet->id;
+        actionList_t& list     = action.getNewActionList();
+        list.ActionTargetID    = PTarget->id;
+        actionTarget_t& target = list.getNewActionTarget();
+        target.animation       = animationID; // Sets the animation ID
+        target.param           = 2582;
+        PPet->loc.zone->PushPacket(PPet, CHAR_INRANGE, new CActionPacket(action)); // Pushes new action packet to anyone within range of the triggering location
+    }
 }; // namespace luautils

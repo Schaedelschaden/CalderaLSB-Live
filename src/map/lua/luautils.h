@@ -337,7 +337,7 @@ namespace luautils
 
     // Caldera custom functions
     void SendServerMsg(CLuaBaseEntity* PLuaBaseEntity, uint8 channel, std::string msg);                                                   // Receives a chat message and converts it for broadcast to a server-wide channel
-	void PlayPetAnimation(CLuaBaseEntity* PLuaBaseEntityPet, CLuaBaseEntity* PLuaBaseEntityTarget, uint8 actionType, uint32 animationID); // Forces the player's pet to play the specified mob animation ID
+    void PlayPetAnimation(CLuaBaseEntity* PLuaBaseEntityPet, CLuaBaseEntity* PLuaBaseEntityTarget, uint8 actionType, uint32 animationID); // Forces the player's pet to play the specified mob animation ID
 }; // namespace luautils
 
 #endif // _LUAUTILS_H -
