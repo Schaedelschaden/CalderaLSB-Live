@@ -2342,6 +2342,43 @@ bool CLuaBaseEntity::isBeside(CLuaBaseEntity const* target, sol::object const& a
 }
 
 /************************************************************************
+*  Function: getCardinalQuadrant()
+*  Purpose : Will return a index of what direction you are facing from a target.
+*  Example : if player:getCardinalQuadrant(target) >= 7 and player:getCardinalQuadrant(target) <=11 then
+*  Example :     print("can use sneak attack!!!")
+*  Example : end
+*  Notes   : index is in scripts/globals/status
+************************************************************************/
+
+uint8 CLuaBaseEntity::getCardinalQuadrant(CLuaBaseEntity const* target)
+{
+    auto angle = worldAngle(target->GetBaseEntity()->loc.p, m_PBaseEntity->loc.p);
+    auto rotRad = rotationToRadian(angle);
+    auto cardinalAngle = radianToRotation(rotRad);
+    // printf("lua_baseentity.cpp getCardinalQuadrant ROTATION: [%i]\n", (int16)cardinalAngle);
+    uint8 cardinalQuadrant = 0;
+
+    if ((cardinalAngle <= 256 && cardinalAngle > 248) || (cardinalAngle <= 8 && cardinalAngle >= 0)){ cardinalQuadrant = 1; } // Target is W,   Player is E
+    else if (cardinalAngle <= 248 && cardinalAngle > 232){ cardinalQuadrant = 2;  }                                           // Target is WSW, Player is ENE
+    else if (cardinalAngle <= 232 && cardinalAngle > 216){ cardinalQuadrant = 3;  }                                           // Target is SW,  Player is NE
+    else if (cardinalAngle <= 216 && cardinalAngle > 200){ cardinalQuadrant = 4;  }                                           // Target is SSW, Player is NNE
+    else if (cardinalAngle <= 200 && cardinalAngle > 184){ cardinalQuadrant = 5;  }                                           // Target is S,   Player is N
+    else if (cardinalAngle <= 184 && cardinalAngle > 168){ cardinalQuadrant = 6;  }                                           // Target is SSE, Player is NNW
+    else if (cardinalAngle <= 168 && cardinalAngle > 152){ cardinalQuadrant = 7;  }                                           // Target is SE,  Player is NW
+    else if (cardinalAngle <= 152 && cardinalAngle > 136){ cardinalQuadrant = 8;  }                                           // Target is ESE, Player is WNW
+    else if (cardinalAngle <= 136 && cardinalAngle > 120){ cardinalQuadrant = 9;  }                                           // Target is E,   Player is W
+    else if (cardinalAngle <= 120 && cardinalAngle > 104){ cardinalQuadrant = 10; }                                           // Target is ENE, Player is WSW
+    else if (cardinalAngle <= 104 && cardinalAngle > 88) { cardinalQuadrant = 11; }                                           // Target is NE,  Player is SW
+    else if (cardinalAngle <= 88 && cardinalAngle > 72)  { cardinalQuadrant = 12; }                                           // Target is NNE, Player is SSW
+    else if (cardinalAngle <= 72 && cardinalAngle > 56)  { cardinalQuadrant = 13; }                                           // Target is N,   Player is S
+    else if (cardinalAngle <= 56 && cardinalAngle > 40)  { cardinalQuadrant = 14; }                                           // Target is NNW, Player is SSE
+    else if (cardinalAngle <= 40 && cardinalAngle > 24)  { cardinalQuadrant = 15; }                                           // Target is NW,  Player is SE
+    else if (cardinalAngle <= 24 && cardinalAngle > 8)   { cardinalQuadrant = 16; }                                           // Target is WNW, Player is ESE
+
+    return cardinalQuadrant;
+}
+
+/************************************************************************
  *  Function: getZone(isZoning)
  *  Purpose : Returns a pointer to a zone object?
  *  Example : if player:getZone() == mob:getZone() then
@@ -3349,6 +3386,28 @@ std::optional<CLuaItem> CLuaBaseEntity::getEquippedItem(uint8 slot)
     }
 
     return std::nullopt;
+}
+
+/************************************************************************
+*  Function: getAmmoQuantity()
+*  Purpose : Returns the current stack size of equipped ammunition
+*  Example : player:getAmmoQuantity()
+*  Notes   :
+************************************************************************/
+
+int32 CLuaBaseEntity::getAmmoQuantity()
+{
+    XI_DEBUG_BREAK_IF(m_PBaseEntity->objtype != TYPE_PC);
+
+    auto* PChar           = static_cast<CCharEntity*>(m_PBaseEntity);
+    CItemEquipment* PAmmo = PChar->getEquip(SLOT_AMMO);
+
+    if ((PAmmo != nullptr) && PAmmo->isType(ITEM_EQUIPMENT))
+    {
+        return PAmmo->getQuantity();
+    }
+
+    return 0;
 }
 
 /************************************************************************
@@ -8115,7 +8174,7 @@ void CLuaBaseEntity::capAllSkills()
 
     auto* PChar = static_cast<CCharEntity*>(m_PBaseEntity);
 
-    for (uint8 i = 1; i < 45; ++i)
+    for (uint8 i = 1; i < 46; ++i)
     {
         const char* Query = "INSERT INTO char_skills "
                             "SET "
@@ -10966,6 +11025,148 @@ uint16 CLuaBaseEntity::healingWaltz()
 }
 
 /************************************************************************
+*  Function: getItemMod()
+*  Purpose : Checks the provided item ID for the specified mod and returns the mod value.
+*  Example : player:getItemMod(10806, 1) Checks the Adamas Shield for DEF
+*  Notes   : Primarily used for PLD Job Trait Shield Barrier
+************************************************************************/
+
+uint32 CLuaBaseEntity::getItemMod(uint32 itemID, uint16 modID)
+{
+    XI_DEBUG_BREAK_IF(m_PBaseEntity->objtype != TYPE_PC);
+
+    const char* fmtQuery = "SELECT item_mods.value FROM item_mods WHERE item_mods.itemID = %u AND item_mods.modID = %u;";
+    int32       ret      = sql->Query(fmtQuery, itemID, modID);
+
+    if (ret != SQL_ERROR && sql->NumRows() != 0 && sql->NextRow() == SQL_SUCCESS)
+    {
+        return (uint32)sql->GetIntData(0);
+    }
+
+    return 0;
+}
+
+/************************************************************************
+*  Function: getGearSlot(itemID)
+*  Purpose : Checks what slot the requested item equips to
+*  Example : player:getGearSlot(17299)
+*  Notes   : 
+************************************************************************/
+
+uint32 CLuaBaseEntity::getGearSlot(uint32 itemID)
+{
+    XI_DEBUG_BREAK_IF(m_PBaseEntity->objtype != TYPE_PC);
+
+    uint16 gearSlot = 0;
+
+    const char* fmtQuery = "SELECT slot FROM item_equipment WHERE itemId = '%i';";
+    int32       ret      = sql->Query(fmtQuery, itemID);
+
+    if (ret != SQL_ERROR && sql->NumRows() != 0 && sql->NextRow() == SQL_SUCCESS)
+    {
+        gearSlot = (uint16)sql->GetIntData(0);
+
+        switch (gearSlot)
+        {
+            case 1:
+                gearSlot = 0; // tpz.slot.MAIN
+                break;
+            case 2:
+                gearSlot = 1; // tpz.slot.SUB
+                break;
+            case 3:
+                gearSlot = 0; // tpz.slot.MAIN or tpz.slot.SUB (Dual Wield)
+                break;
+            case 4:
+                gearSlot = 2; // tpz.slot.RANGED
+                break;
+            case 8:
+                gearSlot = 3; // tpz.slot.AMMO
+                break;
+            case 16:
+                gearSlot = 4; // tpz.slot.HEAD
+                break;
+            case 32:
+                gearSlot = 5; // tpz.slot.BODY
+                break;
+            case 64:
+                gearSlot = 6; // tpz.slot.HANDS
+                break;
+            case 128:
+                gearSlot = 7; // tpz.slot.LEGS
+                break;
+            case 256:
+                gearSlot = 8; // tpz.slot.FEET
+                break;
+            case 512:
+                gearSlot = 9; // tpz.slot.NECK
+                break;
+            case 1024:
+                gearSlot = 10; // tpz.slot.WAIST
+                break;
+            case 6144:
+                gearSlot = 11; // tpz.slot.EAR1 or tpz.slot.EAR2
+                break;
+            case 24576:
+                gearSlot = 13; // tpz.slot.RING1 or tpz.slot.RING2
+                break;
+            case 32768:
+                gearSlot = 15; // tpz.slot.BACK
+                break;
+            default:
+                break;
+        }
+
+        return gearSlot;
+    }
+
+    return 0;
+}
+
+/************************************************************************
+*  Function: getGearName()
+*  Purpose : Returns the name of an item
+*  Example : player:getGearName(itemID)
+*  Notes   : 
+************************************************************************/
+std::string CLuaBaseEntity::getGearName(uint32 itemID)
+{
+    const char* fmtQuery = "SELECT name FROM item_equipment WHERE itemId = '%i';";
+    int32       ret      = sql->Query(fmtQuery, itemID);
+
+    if (ret != SQL_ERROR && sql->NumRows() != 0 && sql->NextRow() == SQL_SUCCESS)
+    {
+        return sql->GetStringData(0);
+    }
+
+    return 0;
+}
+
+/************************************************************************
+*  Function: getGearILvl()
+*  Purpose : Returns the item level of an item
+*  Example : player:getGearILvl(itemID)
+*  Notes   : 
+************************************************************************/
+
+uint32 CLuaBaseEntity::getGearILvl(uint32 itemID)
+{
+    uint8 itemLvl = 0;
+
+    const char* fmtQuery = "SELECT ilevel FROM item_equipment WHERE itemId = '%i';";
+    int32       ret      = sql->Query(fmtQuery, itemID);
+
+    if (ret != SQL_ERROR && sql->NumRows() != 0 && sql->NextRow() == SQL_SUCCESS)
+    {
+        itemLvl = (uint8)sql->GetIntData(0);
+
+        return itemLvl;
+    }
+
+    return 0;
+}
+
+/************************************************************************
  *  Function: addBardSong()
  *  Purpose : Adds a song effect to Player(s') Status Effect Container(s); returns true if sucess
  *  Example : target:addBardSong(caster, xi.effect.BALLAD, power, 0, duration, caster:getID(), 0, 1)
@@ -11079,6 +11280,44 @@ void CLuaBaseEntity::setStatDebilitation(uint16 statDebil)
 }
 
 /************************************************************************
+*  Function: getHitRate()
+*  Purpose : Calculates and returns the Melee Hit Rate of a Weapon equipped in the Main or Sub slot
+*  Example : player:getHitRate(defender, attackNumber, bonusACC) // attackNumber = Main: 0, Sub: 1, Kick: 2
+*  Notes   : 
+************************************************************************/
+
+uint8 CLuaBaseEntity::getHitRate(CLuaBaseEntity* PLuaBaseEntity, uint8 attackNumber, int8 bonusACC)
+{
+    XI_DEBUG_BREAK_IF(m_PBaseEntity->objtype == TYPE_NPC);
+
+    CBattleEntity* PAttacker = static_cast<CBattleEntity*>(m_PBaseEntity);
+    CBattleEntity* PDefender = static_cast<CBattleEntity*>(PLuaBaseEntity->GetBaseEntity());
+
+    uint8 meleeHitRate = battleutils::GetHitRate(PAttacker, PDefender, attackNumber, bonusACC);
+
+    return meleeHitRate;
+}
+
+/************************************************************************
+*  Function: getRangedHitRate()
+*  Purpose : Calculates and returns the Ranged Hit Rate of a Weapon equipped in the Ranged slot
+*  Example : player:getRangedHitRate(defender, isBarrage, accBonus)
+*  Notes   : 
+************************************************************************/
+
+uint8 CLuaBaseEntity::getRangedHitRate(CLuaBaseEntity* PLuaBaseEntity, bool isBarrage, int8 bonusRACC)
+{
+    XI_DEBUG_BREAK_IF(m_PBaseEntity->objtype == TYPE_NPC);
+
+    CBattleEntity* PAttacker = static_cast<CBattleEntity*>(m_PBaseEntity);
+    CBattleEntity* PDefender = static_cast<CBattleEntity*>(PLuaBaseEntity->GetBaseEntity());
+
+    uint8 rangedHitRate = battleutils::GetRangedHitRate(PAttacker, PDefender, isBarrage, bonusRACC);
+
+    return rangedHitRate;
+}
+
+/************************************************************************
  *  Function: getStat()
  *  Purpose : Returns a particular stat for an Entity
  *  Example : caster:getStat(xi.mod.INT)
@@ -11168,8 +11407,7 @@ uint16 CLuaBaseEntity::getEVA()
  *  Function: getRACC()
  *  Purpose : Calculates and returns the Ranged Accuracy of a Weapon euipped in the Ranged slot
  *  Example : player:getRACC()
- *  Notes   : To Do: The calculation is already a public member of battleentity, shouldn't have two calculations, just call (CBattleEntity*)m_PBaseEntity)->RACC
- *and return result
+ *  Notes   : 
  ************************************************************************/
 
 int CLuaBaseEntity::getRACC()
@@ -11185,18 +11423,9 @@ int CLuaBaseEntity::getRACC()
     CBattleEntity* PEntity = static_cast<CBattleEntity*>(m_PBaseEntity);
 
     int skill = PEntity->GetSkill(weapon->getSkillType());
-    int acc   = skill;
+    int RACC  = PEntity->RACC(skill);
 
-    if (skill > 200)
-    {
-        acc = (int)(200 + (skill - 200) * 0.9);
-    }
-
-    acc += PEntity->getMod(Mod::RACC);
-    acc += PEntity->AGI() / 2;
-    acc = acc + std::min<int16>(((100 + PEntity->getMod(Mod::FOOD_RACCP)) * acc / 100), PEntity->getMod(Mod::FOOD_RACC_CAP));
-
-    return acc;
+    return RACC;
 }
 
 /************************************************************************
@@ -11250,6 +11479,23 @@ uint16 CLuaBaseEntity::getILvlSkill()
     if (auto* weapon = dynamic_cast<CItemWeapon*>(static_cast<CBattleEntity*>(m_PBaseEntity)->m_Weapons[SLOT_MAIN]))
     {
         return weapon->getILvlSkill();
+    }
+
+    return 0;
+}
+
+/************************************************************************
+*  Function: getILvlParry()
+*  Purpose : Returns the Parry value of an equipped Main Weapon
+*  Example : player:getILvlParry()
+*  Notes   : Value of m_iLvlParry (private member of CItemWeapon)
+************************************************************************/
+
+uint16 CLuaBaseEntity::getILvlParry()
+{
+    if (auto weapon = dynamic_cast<CItemWeapon*>(((CBattleEntity*)m_PBaseEntity)->m_Weapons[SLOT_MAIN]))
+    {
+        return weapon->getILvlParry();
     }
 
     return 0;
@@ -11943,7 +12189,7 @@ bool CLuaBaseEntity::hasValidJugPetItem()
 
     CItemWeapon* PItem = static_cast<CItemWeapon*>(static_cast<CCharEntity*>(m_PBaseEntity)->getEquip(SLOT_AMMO));
 
-    if (PItem != nullptr && PItem->getSubSkillType() >= SUBSKILL_SHEEP && PItem->getSubSkillType() <= SUBSKILL_TOLOI)
+    if (PItem != nullptr && PItem->getSubSkillType() >= SUBSKILL_SHEEP && PItem->getSubSkillType() <= SUBSKILL_PATRICE)
     {
         return true;
     }
@@ -13908,7 +14154,24 @@ int16 CLuaBaseEntity::getTHlevel()
     XI_DEBUG_BREAK_IF(m_PBaseEntity->objtype != TYPE_MOB);
 
     auto* PMob = static_cast<CMobEntity*>(m_PBaseEntity);
-    return PMob->isDead() ? PMob->m_THLvl : PMob->PEnmityContainer->GetHighestTH();
+
+    return PMob->m_THLvl;
+}
+
+/************************************************************************
+*  Function: setTHlevel()
+*  Purpose : Set the mob's current Treasure Hunter tier
+*  Example : target:setTHlevel(4)
+*  Notes   : Forces the mob's Treasure Hunter value to the integer provided
+************************************************************************/
+
+void CLuaBaseEntity::setTHlevel(uint8 thLevel)
+{
+    XI_DEBUG_BREAK_IF(m_PBaseEntity->objtype != TYPE_MOB);
+
+    auto* PMob = static_cast<CMobEntity*>(m_PBaseEntity);
+
+    PMob->m_THLvl = (uint8)thLevel;
 }
 
 /************************************************************************
@@ -14399,6 +14662,7 @@ void CLuaBaseEntity::Register()
     SOL_REGISTER("isInfront", CLuaBaseEntity::isInfront);
     SOL_REGISTER("isBehind", CLuaBaseEntity::isBehind);
     SOL_REGISTER("isBeside", CLuaBaseEntity::isBeside);
+    SOL_REGISTER("getCardinalQuadrant", CLuaBaseEntity::getCardinalQuadrant);
 
     SOL_REGISTER("getZone", CLuaBaseEntity::getZone);
     SOL_REGISTER("getZoneID", CLuaBaseEntity::getZoneID);
@@ -14436,6 +14700,7 @@ void CLuaBaseEntity::Register()
     // Items
     SOL_REGISTER("getEquipID", CLuaBaseEntity::getEquipID);
     SOL_REGISTER("getEquippedItem", CLuaBaseEntity::getEquippedItem);
+    SOL_REGISTER("getAmmoQuantity", CLuaBaseEntity::getAmmoQuantity);
     SOL_REGISTER("hasItem", CLuaBaseEntity::hasItem);
     SOL_REGISTER("addItem", CLuaBaseEntity::addItem);
     SOL_REGISTER("delItem", CLuaBaseEntity::delItem);
@@ -14839,6 +15104,10 @@ void CLuaBaseEntity::Register()
     SOL_REGISTER("hasBustEffect", CLuaBaseEntity::hasBustEffect);
     SOL_REGISTER("numBustEffects", CLuaBaseEntity::numBustEffects);
     SOL_REGISTER("healingWaltz", CLuaBaseEntity::healingWaltz);
+    SOL_REGISTER("getItemMod", CLuaBaseEntity::getItemMod);
+    SOL_REGISTER("getGearSlot", CLuaBaseEntity::getGearSlot);
+    SOL_REGISTER("getGearName", CLuaBaseEntity::getGearName);
+    SOL_REGISTER("getGearILvl", CLuaBaseEntity::getGearILvl);
     SOL_REGISTER("addBardSong", CLuaBaseEntity::addBardSong);
 
     // BST
@@ -14850,6 +15119,10 @@ void CLuaBaseEntity::Register()
     SOL_REGISTER("getOverloadChance", CLuaBaseEntity::getOverloadChance);
     SOL_REGISTER("setStatDebilitation", CLuaBaseEntity::setStatDebilitation);
 
+    // Hit Rate Calculation
+    SOL_REGISTER("getHitRate", CLuaBaseEntity::getHitRate);
+    SOL_REGISTER("getRangedHitRate", CLuaBaseEntity::getRangedHitRate);
+
     // Damage Calculation
     SOL_REGISTER("getStat", CLuaBaseEntity::getStat);
     SOL_REGISTER("getACC", CLuaBaseEntity::getACC);
@@ -14858,6 +15131,7 @@ void CLuaBaseEntity::Register()
     SOL_REGISTER("getRATT", CLuaBaseEntity::getRATT);
     SOL_REGISTER("getILvlMacc", CLuaBaseEntity::getILvlMacc);
     SOL_REGISTER("getILvlSkill", CLuaBaseEntity::getILvlSkill);
+    SOL_REGISTER("getILvlParry", CLuaBaseEntity::getILvlParry);
 
     SOL_REGISTER("isSpellAoE", CLuaBaseEntity::isSpellAoE);
 
@@ -15026,6 +15300,7 @@ void CLuaBaseEntity::Register()
     SOL_REGISTER("getDespoilDebuff", CLuaBaseEntity::getDespoilDebuff);
     SOL_REGISTER("itemStolen", CLuaBaseEntity::itemStolen);
     SOL_REGISTER("getTHlevel", CLuaBaseEntity::getTHlevel);
+    SOL_REGISTER("setTHlevel", CLuaBaseEntity::setTHlevel);
     SOL_REGISTER("addDropListModification", CLuaBaseEntity::addDropListModification);
 
     SOL_REGISTER("getPlayerRegionInZone", CLuaBaseEntity::getPlayerRegionInZone);

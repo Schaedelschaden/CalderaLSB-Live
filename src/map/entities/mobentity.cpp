@@ -47,6 +47,8 @@
 #include "../utils/itemutils.h"
 #include "../utils/mobutils.h"
 #include "../utils/petutils.h"
+#include "../utils/zoneutils.h"
+#include "../vana_time.h"
 #include "../weapon_skill.h"
 #include "common/timer.h"
 #include "common/utils.h"
@@ -642,6 +644,12 @@ void CMobEntity::OnMobSkillFinished(CMobSkillState& state, action_t& action)
         findFlags |= FINDFLAGS_PET;
     }
 
+    // Allows SMN's Cait Sith Raise II to target dead players
+    if (PSkill->getValidTargets() == TARGET_PLAYER_DEAD)
+    {
+        findFlags |= FINDFLAGS_DEAD;
+    }
+
     action.id = id;
     if (objtype == TYPE_PET && static_cast<CPetEntity*>(this)->getPetType() == PET_TYPE::AVATAR)
     {
@@ -665,7 +673,7 @@ void CMobEntity::OnMobSkillFinished(CMobSkillState& state, action_t& action)
         }
         else if (PSkill->isConal())
         {
-            float angle = 45.0f;
+            float angle = 60.0f;
             PAI->TargetFind->findWithinCone(PTarget, distance, angle, findFlags);
         }
         else
@@ -739,7 +747,7 @@ void CMobEntity::OnMobSkillFinished(CMobSkillState& state, action_t& action)
                 damage = luautils::OnPetAbility(PTarget, this, PSkill, PMaster, &action);
             }
         }
-        else
+        else // Sic or Ready
         {
             damage = luautils::OnMobWeaponSkill(PTarget, this, PSkill, &action);
             this->PAI->EventHandler.triggerListener("WEAPONSKILL_USE", CLuaBaseEntity(this), CLuaBaseEntity(PTarget), PSkill->getID(), state.GetSpentTP(), &action);
@@ -786,7 +794,7 @@ void CMobEntity::OnMobSkillFinished(CMobSkillState& state, action_t& action)
         if (target.speceffect == SPECEFFECT::HIT) // Formerly bitwise and, though nothing in this function adds additional bits to the field
         {
             target.speceffect = SPECEFFECT::RECOIL;
-            target.knockback  = PSkill->getKnockback();
+            target.knockback  = std::clamp(PSkill->getKnockback() - PTarget->getMod(Mod::REDUCE_KNOCKBACK), 0, 15);
             if (first && (PSkill->getPrimarySkillchain() != 0))
             {
                 SUBEFFECT effect = battleutils::GetSkillChainEffect(PTarget, PSkill->getPrimarySkillchain(), PSkill->getSecondarySkillchain(),
@@ -955,39 +963,115 @@ void CMobEntity::DropItems(CCharEntity* PChar)
         int16 maxRolls = 1 + (m_THLvl > 2 ? 2 : m_THLvl);
         int16 bonus    = (m_THLvl > 2 ? (m_THLvl - 2) * 10 : 0);
 
+        if (PChar->getCharVar("AuditTH") == 1)
+        {
+            printf("mobentity.cpp DropItems  NAME: [%s]  MOB: [%s]  MAX ROLLS PER ITEM: [%i]  TH BONUS: [%i]\n", PChar->GetName(), GetName(), maxRolls, bonus);
+        }
+
+        // Handles items from the dropType = 1, groupId = # section of mob_droplist
         for (const DropGroup_t& group : DropList.Groups)
         {
+            // Gives multiple chances to roll the group
             for (int16 roll = 0; roll < maxRolls; ++roll)
             {
+                uint16 groupRoll = xirand::GetRandomNumber(1000);
+
                 // Determine if this group should drop an item
-                if (group.GroupRate > 0 && xirand::GetRandomNumber(1000) < group.GroupRate * settings::get<float>("map.DROP_RATE_MULTIPLIER") + bonus)
+                if (group.GroupRate > 0 && groupRoll < group.GroupRate * settings::get<float>("map.DROP_RATE_MULTIPLIER") + bonus)
                 {
                     // Each item in the group is given its own weight range which is the previous value to the previous value + item.DropRate
                     // Such as 2 items with drop rates of 200 and 800 would be 0-199 and 200-999 respectively
                     uint16 previousRateValue = 0;
-                    uint16 itemRoll          = xirand::GetRandomNumber(1000);
+                    int8   itemsInGroup      = 0;
+                    int*   itemGroupDropRate = 0;
+                    int*   itemGroupItemId   = 0;
+
+                    // Determine how many items are in the group
+                    for (const DropItem_t& itemOne : group.Items)
+                    {
+                        previousRateValue += itemOne.DropRate;
+                        ++itemsInGroup;
+                    }
+
+                    // Set up arrays for number of items in group and their item ID's
+                    itemGroupDropRate = new int [itemsInGroup];
+                    itemGroupItemId   = new int [itemsInGroup];
+                    
+                    int8  counter       = 0;
+                    int16 maxGroupValue = 0;
+
+                    // Assign the items and ID's in group to their arrays
                     for (const DropItem_t& item : group.Items)
                     {
-                        if (previousRateValue + item.DropRate > itemRoll)
+                        previousRateValue          += item.DropRate + bonus;
+                        maxGroupValue               = previousRateValue;
+                        itemGroupDropRate[counter]  = previousRateValue;
+                        itemGroupItemId[counter]    = item.ItemID;
+
+                        if (PChar->getCharVar("AuditTH") == 1)
                         {
-                            if (AddItemToPool(item.ItemID, ++dropCount))
-                            {
-                                return;
-                            }
-                            break;
+                            auto PItem = itemutils::GetItem(item.ItemID);
+                            printf("mobentity.cpp DropItems  ITEM NAME: [%s]  ITEM %i MAX RANGE: [%i]\n", PItem->getName(), counter, itemGroupDropRate[counter]);
                         }
-                        previousRateValue += item.DropRate;
+                        ++counter;
                     }
-                    break;
+
+                    uint16 itemRoll = 0;
+
+                    // Handles "overflow" of TH bonus when drop group items have cumulative drop rate over 1000
+                    if (maxGroupValue > 1000)
+                    {
+                        itemRoll = xirand::GetRandomNumber(maxGroupValue);
+                    }
+                    // "Normal" 100% drop chance
+                    else
+                    {
+                        itemRoll = xirand::GetRandomNumber(1000);
+                    }
+
+                    if (GetLocalVar("FORCE_DROP_RATE") > 0)
+                    {
+                        itemRoll = GetLocalVar("FORCE_DROP_RATE");
+                    }
+
+                    if (PChar->getCharVar("AuditTH") == 1)
+                    {
+                        printf("mobentity.cpp DropItems  GROUP ROLL: [%i]\n\n", itemRoll);
+                    }
+
+                    // Check the random rolled above against the group's individual item drop rates
+                    // Add item to treasure pool if random is lower than item's calculated drop rate
+                    if (itemRoll < maxGroupValue)
+                    {
+                        for (int8 findDrop = 0; findDrop < itemsInGroup; ++findDrop)
+                        {
+                            if (itemRoll <= itemGroupDropRate[findDrop])
+                            {
+                                AddItemToPool(itemGroupItemId[findDrop], ++dropCount);
+                                break;
+                            }
+                        }
+
+                        break;
+                    }
                 }
             }
         }
 
+        // Handles items from the dropType = 0, groupId = 0 section of mob_droplist
         for (const DropItem_t& item : DropList.Items)
         {
             for (int16 roll = 0; roll < maxRolls; ++roll)
             {
-                if (item.DropRate > 0 && xirand::GetRandomNumber(1000) < item.DropRate * settings::get<float>("map.DROP_RATE_MULTIPLIER") + bonus)
+                uint16 itemRoll = xirand::GetRandomNumber(1000);
+
+                if (PChar->getCharVar("AuditTH") == 1 && item.DropType == DROP_NORMAL)
+                {
+                    auto PItem = itemutils::GetItem(item.ItemID);
+                    printf("mobentity.cpp DropItems  ITEM NAME: [%s]  RANDOM: [%i]  ITEM DROP RATE: [%i]\n", PItem->getName(), itemRoll, (uint16)(item.DropRate * settings::get<float>("map.DROP_RATE_MULTIPLIER") + bonus));
+                }
+
+                if (item.DropRate > 0 && itemRoll < item.DropRate * settings::get<float>("map.DROP_RATE_MULTIPLIER") + bonus)
                 {
                     if (AddItemToPool(item.ItemID, ++dropCount))
                     {
@@ -999,11 +1083,13 @@ void CMobEntity::DropItems(CCharEntity* PChar)
         }
     }
 
+    // Check for seal/crest drops
     uint16 Pzone = PChar->getZone();
 
-    bool validZone = ((Pzone > 0 && Pzone < 39) || (Pzone > 42 && Pzone < 134) || (Pzone > 135 && Pzone < 185) || (Pzone > 188 && Pzone < 255));
+    bool validZone = ((Pzone > 0 && Pzone < 39) || (Pzone > 42 && Pzone < 134) || (Pzone > 135 && Pzone < 185) || (Pzone > 188 && Pzone < 255) || (Pzone == 288));
+    bool isNM      = m_Type & MOBTYPE_NOTORIOUS;
 
-    if (!getMobMod(MOBMOD_NO_DROPS) && validZone && charutils::CheckMob(m_HiPCLvl, GetMLevel()) > EMobDifficulty::TooWeak)
+    if (!getMobMod(MOBMOD_NO_DROPS) && validZone && charutils::CheckMob(m_HiPCLvl, GetMLevel()) > EMobDifficulty::TooWeak && !isNM)
     {
         // check for seal drops
         /* MobLvl >= 1 = Beastmen Seals ID=1126
@@ -1011,34 +1097,29 @@ void CMobEntity::DropItems(CCharEntity* PChar)
         >= 75 = Kindred Crests ID=2955
         >= 90 = High Kindred Crests ID=2956
         */
-        if (xirand::GetRandomNumber(100) < 20 && PChar->PTreasurePool->CanAddSeal())
+        int8 dropChance = xirand::GetRandomNumber(100);
+
+        if (dropChance < 33 && PChar->PTreasurePool->CanAddSeal())
         {
             // RULES: Only 1 kind may drop per mob
-            if (GetMLevel() >= 75 && luautils::IsContentEnabled("ABYSSEA")) // all 4 types
+            if (GetMLevel() >= 75 && luautils::IsContentEnabled("ABYSSEA")) // All 3 types
             {
-                switch (xirand::GetRandomNumber(4))
+                switch (xirand::GetRandomNumber(3))
                 {
                     case 0:
-
-                        if (AddItemToPool(1126, ++dropCount))
+                        if (AddItemToPool(1127, ++dropCount)) // Kindred's Seal
                         {
                             return;
                         }
                         break;
                     case 1:
-                        if (AddItemToPool(1127, ++dropCount))
+                        if (AddItemToPool(2955, ++dropCount)) // Kindred's Crest
                         {
                             return;
                         }
                         break;
                     case 2:
-                        if (AddItemToPool(2955, ++dropCount))
-                        {
-                            return;
-                        }
-                        break;
-                    case 3:
-                        if (AddItemToPool(2956, ++dropCount))
+                        if (AddItemToPool(2956, ++dropCount)) // High Kindred Crest
                         {
                             return;
                         }
@@ -1102,126 +1183,168 @@ void CMobEntity::DropItems(CCharEntity* PChar)
             LV >= 80 = Avatrites can also drop, same rules. If one drops, the other does not.
             unfortunately, the order of the items/weathers/days don't match.
         */
-        if (GetMLevel() >= 50)
+        dropChance = xirand::GetRandomNumber(100);
+        uint8 weekDay = (uint8)CVanaTime::getInstance()->getWeekday();
+        auto weatherElement = zoneutils::GetWeatherElement(battleutils::GetWeather((CBattleEntity*)PChar, true));
+
+        if (dropChance < 33 && weatherElement > 0)
         {
-            uint8 weather = PChar->loc.zone->GetWeather();
-            uint8 element = 0;
-
-            // Set element by weather
-            if (weather >= 4 && weather <= 19)
+            if (GetMLevel() >= 80 && luautils::IsContentEnabled("ABYSSEA")) // Avatarite
             {
-                /*
-                element = zoneutils::GetWeatherElement(weather);
-                Can't use this because of the TODO in zoneutils about broken element order >.<
-                So we have this ugly switch until then.
-                */
-                switch (weather)
+                switch (weatherElement)
                 {
-                    case 4:
-                    case 5:
-                        element = ELEMENT_FIRE;
+                    case 0:
+                        break; // No element
+                    case 1: // Hot Spell, Heat Wave
+                        if (AddItemToPool(3520, ++dropCount)) // Ifritite
+                            return;
                         break;
-                    case 6:
-                    case 7:
-                        element = ELEMENT_WATER;
+                    case 2: // Snow, Blizzards
+                        if (AddItemToPool(3521, ++dropCount)) // Shivite
+                            return;
                         break;
-                    case 8:
-                    case 9:
-                        element = ELEMENT_EARTH;
+                    case 3: // Wind, Gales
+                        if (AddItemToPool(3522, ++dropCount)) // Garudite
+                            return;
                         break;
-                    case 10:
-                    case 11:
-                        element = ELEMENT_WIND;
+                    case 4: // Dust Storm, Sand Storm
+                        if (AddItemToPool(3523, ++dropCount)) // Titanite
+                            return;
                         break;
-                    case 12:
-                    case 13:
-                        element = ELEMENT_ICE;
+                    case 5: // Thunder, Thunderstorms
+                        if (AddItemToPool(3524, ++dropCount)) // Ramuite
+                            return;
                         break;
-                    case 14:
-                    case 15:
-                        element = ELEMENT_THUNDER;
+                    case 6: // Rain, Squall
+                        if (AddItemToPool(3525, ++dropCount)) // Leviatite
+                            return;
                         break;
-                    case 16:
-                    case 17:
-                        element = ELEMENT_LIGHT;
+                    case 7: // Auroras, Stellar Glare
+                        if (AddItemToPool(3526, ++dropCount)) // Carbite
+                            return;
                         break;
-                    case 18:
-                    case 19:
-                        element = ELEMENT_DARK;
-                        break;
-                    default:
+                    case 8: // Gloom, Darkness
+                        if (AddItemToPool(3527, ++dropCount)) // Fenrite
+                            return;
                         break;
                 }
             }
-            // Set element from day instead
-            else
+            if (GetMLevel() >= 50 && GetMLevel() <= 79 && luautils::IsContentEnabled("ABYSSEA")) // Geodes
             {
-                element = battleutils::GetDayElement();
-            }
-
-            // Roll for Geode, dude!
-            if (xirand::GetRandomNumber(100) < 20)
-            {
-                switch (element)
+                switch (weatherElement)
                 {
-                    case ELEMENT_FIRE:
-                        AddItemToPool(3297, ++dropCount); // Flame Geode
+                    case 0:
+                        break; // No element
+                    case 1: // Hot Spell, Heat Wave
+                        if (AddItemToPool(3297, ++dropCount)) // Flame Geode
+                            return;
                         break;
-                    case ELEMENT_EARTH:
-                        AddItemToPool(3300, ++dropCount); // Soil Geode
+                    case 2: // Snow, Blizzards
+                        if (AddItemToPool(3298, ++dropCount)) // Snow Geode
+                            return;
                         break;
-                    case ELEMENT_WATER:
-                        AddItemToPool(3302, ++dropCount); // Aqua Geode
+                    case 3: // Wind, Gales
+                        if (AddItemToPool(3299, ++dropCount)) // Breeze Geode
+                            return;
                         break;
-                    case ELEMENT_WIND:
-                        AddItemToPool(3299, ++dropCount); // Breeze Geode
+                    case 4: // Dust Storm, Sand Storm
+                        if (AddItemToPool(3300, ++dropCount)) // Soil Geode
+                            return;
                         break;
-                    case ELEMENT_ICE:
-                        AddItemToPool(3298, ++dropCount); // Snow Geode
+                    case 5: // Thunder, Thunderstorms
+                        if (AddItemToPool(3301, ++dropCount)) // Thunder Geode
+                            return;
                         break;
-                    case ELEMENT_THUNDER:
-                        AddItemToPool(3301, ++dropCount); // Thunder Geode
+                    case 6: // Rain, Squall
+                        if (AddItemToPool(3302, ++dropCount)) // Aqua Geode
+                            return;
                         break;
-                    case ELEMENT_LIGHT:
-                        AddItemToPool(3303, ++dropCount); // Light Geode
+                    case 7: // Auroras, Stellar Glare
+                        if (AddItemToPool(3303, ++dropCount)) // Light Geode
+                            return;
                         break;
-                    case ELEMENT_DARK:
-                        AddItemToPool(3304, ++dropCount); // Shadow Geode
-                        break;
-                    default:
+                    case 8: // Gloom, Darkness
+                        if (AddItemToPool(3304, ++dropCount)) // Shadow Geode
+                            return;
                         break;
                 }
             }
-            // At LV 80 and above, you may get Avatarite if a Geode didn't drop
-            else if (GetMLevel() >= 80 && xirand::GetRandomNumber(100) < 20)
+        }
+        else if (dropChance < 15 && weatherElement == 0)
+        {
+            if (GetMLevel() >= 80 && luautils::IsContentEnabled("ABYSSEA")) // Avatarite
             {
-                switch (element)
+                switch (weekDay)
                 {
-                    case ELEMENT_FIRE:
-                        AddItemToPool(3520, ++dropCount); // Ifritite
+                    case 0: // Firesday
+                        if (AddItemToPool(3520, ++dropCount)) // Ifritite
+                            return;
                         break;
-                    case ELEMENT_EARTH:
-                        AddItemToPool(3523, ++dropCount); // Titanite
+                    case 1: // Earthsday
+                        if (AddItemToPool(3523, ++dropCount)) // Titanite
+                            return;
                         break;
-                    case ELEMENT_WATER:
-                        AddItemToPool(3525, ++dropCount); // Leviatite
+                    case 2: // Watersday
+                        if (AddItemToPool(3525, ++dropCount)) // Leviatite
+                            return;
                         break;
-                    case ELEMENT_WIND:
-                        AddItemToPool(3522, ++dropCount); // Garudite
+                    case 3: // Windsday
+                        if (AddItemToPool(3522, ++dropCount)) // Garudite
+                            return;
                         break;
-                    case ELEMENT_ICE:
-                        AddItemToPool(3521, ++dropCount); // Shivite
+                    case 4: // Iceday
+                        if (AddItemToPool(3521, ++dropCount)) // Shivite
+                            return;
                         break;
-                    case ELEMENT_THUNDER:
-                        AddItemToPool(3524, ++dropCount); // Ramuite
+                    case 5: // Lightningday
+                        if (AddItemToPool(3524, ++dropCount)) // Ramuite
+                            return;
                         break;
-                    case ELEMENT_LIGHT:
-                        AddItemToPool(3526, ++dropCount); // Carbit
+                    case 6: // Lightsday
+                        if (AddItemToPool(3526, ++dropCount)) // Carbite
+                            return;
                         break;
-                    case ELEMENT_DARK:
-                        AddItemToPool(3527, ++dropCount); // Fenrite
+                    case 7: // Darksday
+                        if (AddItemToPool(3527, ++dropCount)) // Fenrite
+                            return;
                         break;
-                    default:
+                }
+            }
+            if (GetMLevel() >= 50 && GetMLevel() <= 79 && luautils::IsContentEnabled("ABYSSEA")) // Geodes
+            {
+                switch (weekDay)
+                {
+                    case 0: // Firesday
+                        if (AddItemToPool(3297, ++dropCount)) // Flame Geode
+                            return;
+                        break;
+                    case 1: // Earthsday
+                        if (AddItemToPool(3300, ++dropCount)) // Soil Geode
+                            return;
+                        break;
+                    case 2: // Watersday
+                        if (AddItemToPool(3302, ++dropCount)) // Aqua Geode
+                            return;
+                        break;
+                    case 3: // Windsday
+                        if (AddItemToPool(3299, ++dropCount)) // Breeze Geode
+                            return;
+                        break;
+                    case 4: // Iceday
+                        if (AddItemToPool(3298, ++dropCount)) // Snow Geode
+                            return;
+                        break;
+                    case 5: // Lightningday
+                        if (AddItemToPool(3301, ++dropCount)) // Thunder Geode
+                            return;
+                        break;
+                    case 6: // Lightsday
+                        if (AddItemToPool(3303, ++dropCount)) // Light Geode
+                            return;
+                        break;
+                    case 7: // Darksday
+                        if (AddItemToPool(3304, ++dropCount)) // Shadow Geode
+                            return;
                         break;
                 }
             }
@@ -1388,7 +1511,6 @@ void CMobEntity::OnDespawn(CDespawnState& /*unused*/)
 void CMobEntity::Die()
 {
     TracyZoneScoped;
-    m_THLvl = PEnmityContainer->GetHighestTH();
     PEnmityContainer->Clear();
     PAI->ClearStateStack();
     if (PPet != nullptr && PPet->isAlive() && GetMJob() == JOB_SMN)

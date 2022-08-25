@@ -58,6 +58,7 @@ public:
     uint16 getVE();
     void   setVE(uint16 ve);
     void   setRange(float range);
+    uint16 getTotalTargets();
 
     static void Register();
 };

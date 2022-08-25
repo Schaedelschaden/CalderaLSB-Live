@@ -164,7 +164,7 @@ void CItemEquipment::addModifier(CModifier modifier)
     {
         // reduction calc source: www.bluegartr.com/threads/84830-Shield-Asstery
         // http://www.ffxiah.com/forum/topic/21671/paladin-faq-info-and-trade-studies/33/ <~Aegis and Ochain
-        auto pdt = (uint8)(modifier.getModAmount() / 2);
+        auto pdt = (uint8)(modifier.getModAmount() / 3);
 
         switch (m_shieldSize)
         {
