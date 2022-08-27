@@ -903,7 +903,7 @@ enum class SpellID : uint16
     Bilgestorm           = 742,
     Bloodrake            = 743,
     Droning_Whirlwind    = 744,
-    Carcharian Verve     = 745,
+    Carcharian_Verve     = 745,
     Blistering_Roar      = 746,
     Uproot               = 747,
     Crashing_Thunder     = 748,
