@@ -409,7 +409,7 @@ namespace trustutils
         PTrust->SetSJob(trustData->sJob);
 
         // assume level matches master
-        PTrust->SetMLevel(PMaster->GetMLevel());
+        PTrust->SetMLevel(PMaster->GetMLevel() + charutils::getItemLevelDifference(PMaster));
         PTrust->SetSLevel(std::floor(PMaster->GetMLevel() / 2));
 
         LoadTrustStatsAndSkills(PTrust);
@@ -653,13 +653,65 @@ namespace trustutils
         }
 
         auto statMultiplier = settings::get<float>("map.ALTER_EGO_STAT_MULTIPLIER");
-        PTrust->stats.STR   = static_cast<uint16>((fSTR + mSTR + sSTR) * statMultiplier);
-        PTrust->stats.DEX   = static_cast<uint16>((fDEX + mDEX + sDEX) * statMultiplier);
-        PTrust->stats.VIT   = static_cast<uint16>((fVIT + mVIT + sVIT) * statMultiplier);
-        PTrust->stats.AGI   = static_cast<uint16>((fAGI + mAGI + sAGI) * statMultiplier);
-        PTrust->stats.INT   = static_cast<uint16>((fINT + mINT + sINT) * statMultiplier);
-        PTrust->stats.MND   = static_cast<uint16>((fMND + mMND + sMND) * statMultiplier);
-        PTrust->stats.CHR   = static_cast<uint16>((fCHR + mCHR + sCHR) * statMultiplier);
+
+        if (mLvl < 100)
+        {
+            PTrust->stats.STR = static_cast<uint16>((fSTR + mSTR + sSTR));
+            PTrust->stats.DEX = static_cast<uint16>((fDEX + mDEX + sDEX));
+            PTrust->stats.VIT = static_cast<uint16>((fVIT + mVIT + sVIT));
+            PTrust->stats.AGI = static_cast<uint16>((fAGI + mAGI + sAGI));
+            PTrust->stats.INT = static_cast<uint16>((fINT + mINT + sINT));
+            PTrust->stats.MND = static_cast<uint16>((fMND + mMND + sMND));
+            PTrust->stats.CHR = static_cast<uint16>((fCHR + mCHR + sCHR));
+
+            PTrust->addModifier(Mod::DEF, (uint16)(mobutils::GetBase(PTrust, PTrust->defRank)));
+            PTrust->addModifier(Mod::EVA, (uint16)(mobutils::GetEvasion(PTrust)));
+            PTrust->addModifier(Mod::ATT, (uint16)(mobutils::GetBase(PTrust, PTrust->attRank)));
+            PTrust->addModifier(Mod::ACC, (uint16)(mobutils::GetBase(PTrust, PTrust->accRank)));
+            PTrust->addModifier(Mod::MACC, (uint16)(mobutils::GetBase(PTrust, PTrust->accRank)));
+            PTrust->addModifier(Mod::MATT, (uint16)(mobutils::GetBase(PTrust, PTrust->attRank)));
+            PTrust->addModifier(Mod::RATT, (uint16)(mobutils::GetBase(PTrust, PTrust->attRank)));
+            PTrust->addModifier(Mod::RACC, (uint16)(mobutils::GetBase(PTrust, PTrust->accRank)));
+
+            // Natural magic evasion
+            PTrust->addModifier(Mod::MEVA, (uint16)(mobutils::GetMagicEvasion(PTrust)));
+        }
+        else
+        {
+            PTrust->stats.STR = static_cast<uint16>((fSTR + mSTR + sSTR) * statMultiplier);
+            PTrust->stats.DEX = static_cast<uint16>((fDEX + mDEX + sDEX) * statMultiplier);
+            PTrust->stats.VIT = static_cast<uint16>((fVIT + mVIT + sVIT) * statMultiplier);
+            PTrust->stats.AGI = static_cast<uint16>((fAGI + mAGI + sAGI) * statMultiplier);
+            PTrust->stats.INT = static_cast<uint16>((fINT + mINT + sINT) * statMultiplier);
+            PTrust->stats.MND = static_cast<uint16>((fMND + mMND + sMND) * statMultiplier);
+            PTrust->stats.CHR = static_cast<uint16>((fCHR + mCHR + sCHR) * statMultiplier);
+
+            PTrust->addModifier(Mod::DEF, (uint16)(mobutils::GetBase(PTrust, PTrust->defRank) * statMultiplier));
+            PTrust->addModifier(Mod::EVA, (uint16)(mobutils::GetEvasion(PTrust) * statMultiplier));
+            PTrust->addModifier(Mod::ATT, (uint16)(mobutils::GetBase(PTrust, PTrust->attRank) * statMultiplier));
+            PTrust->addModifier(Mod::ACC, (uint16)(mobutils::GetBase(PTrust, PTrust->accRank) * statMultiplier));
+            PTrust->addModifier(Mod::MACC, (uint16)(mobutils::GetBase(PTrust, PTrust->accRank) * statMultiplier));
+            PTrust->addModifier(Mod::MATT, (uint16)(mobutils::GetBase(PTrust, PTrust->attRank) * statMultiplier));
+            PTrust->addModifier(Mod::RATT, (uint16)(mobutils::GetBase(PTrust, PTrust->attRank) * statMultiplier));
+            PTrust->addModifier(Mod::RACC, (uint16)(mobutils::GetBase(PTrust, PTrust->accRank) * statMultiplier));
+
+            // Natural magic evasion
+            PTrust->addModifier(Mod::MEVA, (uint16)(mobutils::GetMagicEvasion(PTrust) * statMultiplier));
+        }
+
+        // Job specific mods
+        if (mJob == JOB_BLM)
+        {
+            PTrust->addModifier(Mod::ENMITY, (uint16)(mLvl * -0.84f));
+        }
+        else if (mJob == JOB_PLD)
+        {
+            PTrust->addModifier(Mod::ENMITY, (uint16)(mLvl * 0.84f));
+        }
+        else if (mJob == JOB_RNG)
+        {
+            PTrust->addModifier(Mod::RACC, (uint16)(mLvl * 1.5f));
+        }
 
         // Skills =======================
         for (int i = SKILL_DIVINE_MAGIC; i <= SKILL_BLUE_MAGIC; i++)
@@ -689,17 +741,6 @@ namespace trustutils
                 PTrust->WorkingSkills.skill[i] = static_cast<uint16>(maxSkill * settings::get<float>("map.ALTER_EGO_SKILL_MULTIPLIER"));
             }
         }
-
-        PTrust->addModifier(Mod::DEF, mobutils::GetBase(PTrust, PTrust->defRank));
-        PTrust->addModifier(Mod::EVA, mobutils::GetEvasion(PTrust));
-        PTrust->addModifier(Mod::ATT, mobutils::GetBase(PTrust, PTrust->attRank));
-        PTrust->addModifier(Mod::ACC, mobutils::GetBase(PTrust, PTrust->accRank));
-
-        PTrust->addModifier(Mod::RATT, mobutils::GetBase(PTrust, PTrust->attRank));
-        PTrust->addModifier(Mod::RACC, mobutils::GetBase(PTrust, PTrust->accRank));
-
-        // Natural magic evasion
-        PTrust->addModifier(Mod::MEVA, mobutils::GetMagicEvasion(PTrust));
 
         // Add traits for sub and main
         battleutils::AddTraits(PTrust, traits::GetTraits(mJob), mLvl);

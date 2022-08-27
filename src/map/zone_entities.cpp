@@ -542,7 +542,10 @@ void CZoneEntities::SpawnMOBs(CCharEntity* PChar)
 
             // проверка ночного/дневного сна монстров уже учтена в проверке CurrentAction, т.к. во сне монстры не ходят ^^
 
-            const EMobDifficulty mobCheck = charutils::CheckMob(PChar->GetMLevel(), PCurrentMob->GetMLevel());
+            uint8 charLvl   = PChar->GetMLevel() + charutils::getItemLevelDifference(PChar);
+            uint8 targetLvl = PCurrentMob->GetMLevel();
+
+            const EMobDifficulty mobCheck = charutils::CheckMob(charLvl, targetLvl);
 
             CMobController* PController = static_cast<CMobController*>(PCurrentMob->PAI->GetController());
 
@@ -1188,13 +1191,20 @@ void CZoneEntities::PushPacket(CBaseEntity* PEntity, GLOBAL_MESSAGE_TYPE message
                 TracyZoneCString("CHAR_INRANGE");
                 // todo: rewrite packet handlers and use enums instead of rawdog packet ids
                 // 30 yalms if action packet, 50 otherwise
-                const int checkDistanceSq = packet->getType() == 0x0028 ? 900 : 2500;
+                int16 checkDistanceSq = packet->getType() == 0x0028 ? 900 : 2500;
 
                 for (EntityList_t::const_iterator it = m_charList.begin(); it != m_charList.end(); ++it)
                 {
                     CCharEntity* PCurrentChar = (CCharEntity*)it->second;
                     if (PEntity != PCurrentChar)
                     {
+                        // Force maximum range in battlefields
+                        // Addresses AA TT going invisible when teleporting out of 30 yalm range
+                        if (PEntity->PBattlefield)
+                        {
+                            checkDistanceSq = 2500;
+                        }
+
                         if (distanceSquared(PEntity->loc.p, PCurrentChar->loc.p) < checkDistanceSq &&
                             ((PEntity->objtype != TYPE_PC) || (((CCharEntity*)PEntity)->m_moghouseID == PCurrentChar->m_moghouseID)))
                         {

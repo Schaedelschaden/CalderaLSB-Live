@@ -337,11 +337,11 @@ namespace synthutils
                 case 3: // 1 in 4
                     chance = 0.25;
                     break;
-                case 2: // 1 in 20
-                    chance = 0.05;
+                case 2: // 1 in 16
+                    chance = 0.0625;
                     break;
-                case 1: // 1 in 100
-                    chance = 0.01;
+                case 1: // 1 in 32
+                    chance = 0.03125;
                     break;
                 default: // No chance
                     chance = 0;
@@ -357,18 +357,18 @@ namespace synthutils
 
             // Using x/512 calculation for HQ success rate modifier
             // see: https://www.bluegartr.com/threads/130586-CraftyMath-v2-Post-September-2017-Update
-            chance += (double)modSynthHqRate / 512.;
+            chance += (double)modSynthHqRate / 100.; // 512.;
 
             if (chance > 0)
             {
                 // limit max hq chance
                 if (PChar->CraftContainer->getCraftType() == 1)
                 {
-                    chance = std::clamp(chance, 0., 0.800);
+                    chance = std::clamp(chance, 0., 0.900);
                 }
                 else
                 {
-                    chance = std::clamp(chance, 0., 0.500);
+                    chance = std::clamp(chance, 0., 0.600);
                 }
             }
 

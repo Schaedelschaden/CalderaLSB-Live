@@ -391,6 +391,15 @@ namespace puppetutils
                 PChar->PAutomaton->setElementMax(i, tempElementMax[i]);
             }
         }
+
+        // Remove all currently equipped attachments
+        for (uint8 i = 0; i < 12; i++)
+        {
+            if (PChar->PAutomaton->getAttachment(i) != 0)
+            {
+                setAttachment(PChar, i, 0);
+            }
+        }
     }
 
     void setHead(CCharEntity* PChar, uint8 head)
@@ -463,6 +472,15 @@ namespace puppetutils
             for (int i = 0; i < 8; i++)
             {
                 PChar->PAutomaton->setElementMax(i, tempElementMax[i]);
+            }
+        }
+
+        // Remove all currently equipped attachments
+        for (uint8 i = 0; i < 12; i++)
+        {
+            if (PChar->PAutomaton->getAttachment(i) != 0)
+            {
+                setAttachment(PChar, i, 0);
             }
         }
     }
