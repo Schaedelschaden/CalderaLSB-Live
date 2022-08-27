@@ -370,7 +370,7 @@ namespace attackutils
             }
             else if (PChar->StatusEffectContainer->HasStatusEffect(EFFECT_TRIPLE_SHOT))
             {
-                uint16 chanceQuad = tpzrand::GetRandomNumber(100);
+                uint16 chanceQuad = xirand::GetRandomNumber(100);
 
                 // Triple Shot: Occasionally becomes Quad Shot
                 if (ammoQty >= 4 && trpl_occ_quad > 0 && chanceQuad <= trpl_occ_quad)
@@ -393,7 +393,7 @@ namespace attackutils
             }
             else if (PChar->StatusEffectContainer->HasStatusEffect(EFFECT_DOUBLE_SHOT))
             {
-                uint16 chanceTrpl = tpzrand::GetRandomNumber(100);
+                uint16 chanceTrpl = xirand::GetRandomNumber(100);
 
                 // Double Shot: Occasionally becomes Double Shot
                 if (ammoQty >= 3 && dbl_occ_trpl > 0 && chanceTrpl <= dbl_occ_trpl)

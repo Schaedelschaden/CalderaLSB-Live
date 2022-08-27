@@ -406,7 +406,7 @@ void CEnmityContainer::UpdateEnmityFromDamage(CBattleEntity* PEntity, int32 Dama
     Damage          = (Damage < 1 ? 1 : Damage);
     int16 level     = m_EnmityHolder->GetMLevel();
     int16 damageMod = battleutils::GetEnmityModDamage(level);
-    double lvlScalingFactor = 1;
+    double lvlScalingFactor = 1.f;
 
     if (level >= 51 && level <= 99)
     {
@@ -427,7 +427,7 @@ void CEnmityContainer::UpdateEnmityFromDamage(CBattleEntity* PEntity, int32 Dama
 
     if (PEntity->objtype == TYPE_PC && charutils::GetCharVar((CCharEntity*)PEntity, "AuditEnmity") == 1)
     {
-        lvlScalingFactor += (charutils::GetCharVar((CCharEntity*)PEntity, "EnmityMult") / 10);
+        lvlScalingFactor += (charutils::GetCharVar((CCharEntity*)PEntity, "EnmityMult") / 10.f);
     }
 
     int32 CE = (int32)(((80.f / damageMod) * Damage) * lvlScalingFactor);
