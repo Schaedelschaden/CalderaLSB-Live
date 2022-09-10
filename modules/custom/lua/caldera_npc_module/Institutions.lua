@@ -54,54 +54,54 @@ local ValidSpells =
 -- Corsair Rolls
 local ValidRolls = {
     98, -- Fighter's Roll
-	99, -- Monk's Roll
-	100, -- Healer's Roll
-	101, -- Wizard's Roll
-	102, -- Warlock's Roll
-	103, -- Rogue's Roll
-	104, -- Gallant's Roll
-	105, -- Chaos Roll
-	106, -- Beast Roll
-	107, -- Choral Roll
-	108, -- Hunter's Roll
-	109, -- Samurai Roll
-	110, -- Ninja Roll
-	111, -- Drachen Roll
-	112, -- Evoker's Roll
-	113, -- Magus' Roll
-	114, -- Corsair's Roll
-	115, -- Puppet's Roll
-	116, -- Dancer's Roll
-	117, -- Scholar's Roll
-	118, -- Bolter's Roll
-	119, -- Caster's Roll
-	120, -- Courser's Roll
-	121, -- Blitzer's Roll
-	122, -- Tactician's Roll
-	302, -- Allies Roll
-	303, -- Miser's Roll
-	304, -- Companion's Roll
-	305, -- Avenger's Roll
-	390, -- Naturalist's Roll
-	391, -- Runeist's Roll
+    99, -- Monk's Roll
+    100, -- Healer's Roll
+    101, -- Wizard's Roll
+    102, -- Warlock's Roll
+    103, -- Rogue's Roll
+    104, -- Gallant's Roll
+    105, -- Chaos Roll
+    106, -- Beast Roll
+    107, -- Choral Roll
+    108, -- Hunter's Roll
+    109, -- Samurai Roll
+    110, -- Ninja Roll
+    111, -- Drachen Roll
+    112, -- Evoker's Roll
+    113, -- Magus' Roll
+    114, -- Corsair's Roll
+    115, -- Puppet's Roll
+    116, -- Dancer's Roll
+    117, -- Scholar's Roll
+    118, -- Bolter's Roll
+    119, -- Caster's Roll
+    120, -- Courser's Roll
+    121, -- Blitzer's Roll
+    122, -- Tactician's Roll
+    302, -- Allies Roll
+    303, -- Miser's Roll
+    304, -- Companion's Roll
+    305, -- Avenger's Roll
+    390, -- Naturalist's Roll
+    391, -- Runeist's Roll
 }
 
 -- Automaton Attachments
 local ValidAttachments = {
-	8193, 8194, 8195, 8196, 8197, 8198, 8224, 8225, 8226, 8227,
-	8449, 8450, 8451, 8452, 8453, 8454, 8455, 8456, 8458,
-	8462, 8481, 8482, 8483, 8484, 8485, 8486, 8487, 8488, 8489, 8490, 8491, 8493, 8497,
-	8513, 8514, 8515, 8516, 8517, 8518, 8519, 8520,
-	8523, 8524, 8526, 8528, 8545, 8546, 8547, 8548, 8549, 8550, 8551,
-	8555, 8577, 8578, 8579, 8580, 8581, 8582, 8583, 8584, 8585,
-	8587, 8609, 8610, 8611, 8612, 8613, 8614, 8615, 8616,
-	8619, 8641, 8642, 8643, 8644, 8645, 8646, 8648, 8651,
-	8673, 8674, 8675, 8676, 8677, 8678, 8680, 8682, 9138, 9143, 9230,
+    8193, 8194, 8195, 8196, 8197, 8198, 8224, 8225, 8226, 8227,
+    8449, 8450, 8451, 8452, 8453, 8454, 8455, 8456, 8458,
+    8462, 8481, 8482, 8483, 8484, 8485, 8486, 8487, 8488, 8489, 8490, 8491, 8493, 8497,
+    8513, 8514, 8515, 8516, 8517, 8518, 8519, 8520,
+    8523, 8524, 8526, 8528, 8545, 8546, 8547, 8548, 8549, 8550, 8551,
+    8555, 8577, 8578, 8579, 8580, 8581, 8582, 8583, 8584, 8585,
+    8587, 8609, 8610, 8611, 8612, 8613, 8614, 8615, 8616,
+    8619, 8641, 8642, 8643, 8644, 8645, 8646, 8648, 8651,
+    8673, 8674, 8675, 8676, 8677, 8678, 8680, 8682, 9138, 9143, 9230,
 }
 
 local ValidTrusts = {
-	896, 898, 899, 900, 901, 902, 903, 904, 905, 908, 909, 910, 911, 913, 917, 933,
-	940, 951, 952, 968, 1010, 1019
+    896, 898, 899, 900, 901, 902, 903, 904, 905, 908, 909, 910, 911, 913, 917, 933,
+    940, 951, 952, 968, 1010, 1019
 }
 
 local function AddAllSpells(player)
@@ -123,113 +123,113 @@ local function AddAllAttachments(player)
 end
 
 local function AddAllMounts(player)
-	for i = xi.ki.CHOCOBO_COMPANION, xi.ki.CHOCOBO_COMPANION + 26 do
+    for i = xi.ki.CHOCOBO_COMPANION, xi.ki.CHOCOBO_COMPANION + 26 do
         player:addKeyItem(i)
     end
 end
 
 local function AddAllChairs(player)
-	for i = xi.ki.IMPERIAL_CHAIR, xi.ki.LEAF_BENCH do
+    for i = xi.ki.IMPERIAL_CHAIR, xi.ki.LEAF_BENCH do
         player:addKeyItem(i)
     end
 end
 
 local function AddAllTrusts(player)
-	for i = 1, #ValidTrusts do
-		player:addSpell(ValidTrusts[i], true, true)
-	end
+    for i = 1, #ValidTrusts do
+        player:addSpell(ValidTrusts[i], true, true)
+    end
 end
 
 local function SetZilart(player)
-	local missionZM = {0, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 23, 24, 26, 27, 28, 30}
+    local missionZM = {0, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 23, 24, 26, 27, 28, 30}
 
-	for i = 1, #missionZM do
---		player:completeMission(3, 0)
---		player:delMission(3, missionZM[i])
-		player:completeMission(3, missionZM[i])
-		player:addMission(3, missionZM[i] + 1)
-	end
-	
-	player:addMission(3, 31) -- RoZ: Awakening
-	player:addKeyItem(238) -- Sacrifical Chamber Key
-	player:addKeyItem(247) -- Prismatic Fragment
-	player:addKeyItem(452) -- Cerulean Crystal
+    for i = 1, #missionZM do
+--      player:completeMission(3, 0)
+--      player:delMission(3, missionZM[i])
+        player:completeMission(3, missionZM[i])
+        player:addMission(3, missionZM[i] + 1)
+    end
+    
+    player:addMission(3, 31) -- RoZ: Awakening
+    player:addKeyItem(238) -- Sacrifical Chamber Key
+    player:addKeyItem(247) -- Prismatic Fragment
+    player:addKeyItem(452) -- Cerulean Crystal
 end
 
 local function SetCoP(player)
-	local missionCoP = {101, 110, 118, 128, 138, 218, 228, 238, 248, 257, 258, 318, 325, 335, 341, 350, 358, 368, 418, 428, 438, 448,
-	                    518, 530, 543, 552, 560, 568, 578, 618, 628, 638, 648, 718, 728, 738, 748, 758, 800, 818, 828, 840, 850}
-						
-	for i = 1, #missionCoP do
-		player:addMission(3, missionCoP[i])
-		player:completeMission(3, missionCoP[i])
-	end
+    local missionCoP = {101, 110, 118, 128, 138, 218, 228, 238, 248, 257, 258, 318, 325, 335, 341, 350, 358, 368, 418, 428, 438, 448,
+                        518, 530, 543, 552, 560, 568, 578, 618, 628, 638, 648, 718, 728, 738, 748, 758, 800, 818, 828, 840, 850}
+                        
+    for i = 1, #missionCoP do
+        player:addMission(3, missionCoP[i])
+        player:completeMission(3, missionCoP[i])
+    end
 
-	player:addMission(6, 850) -- CoP: The Last Verse
-	player:addKeyItem(708) -- Mysterious Amulet
-	player:addKeyItem(591) -- Light of Dem
-	player:addKeyItem(590) -- Light of Holla
-	player:addKeyItem(592) -- Light of Mea
-	player:addKeyItem(604) -- Pso'Xja Pass
-	player:addKeyItem(593) -- Light of Vahzl
-	player:addKeyItem(594) -- Light of Al'Taieu
-	player:addItem(14657) -- Ducal Guard's Ring
-	player:addItem(14672) -- Tavnazian Ring
+    player:addMission(6, 850) -- CoP: The Last Verse
+    player:addKeyItem(708) -- Mysterious Amulet
+    player:addKeyItem(591) -- Light of Dem
+    player:addKeyItem(590) -- Light of Holla
+    player:addKeyItem(592) -- Light of Mea
+    player:addKeyItem(604) -- Pso'Xja Pass
+    player:addKeyItem(593) -- Light of Vahzl
+    player:addKeyItem(594) -- Light of Al'Taieu
+    player:addItem(14657) -- Ducal Guard's Ring
+    player:addItem(14672) -- Tavnazian Ring
 end
 
 m:addOverride(string.format("xi.zones.Celennia_Memorial_Library.npcs.%s.onTrigger", npcToReplaceName), function(player,npc)
-	if (player:getCharVar("HasTriggeredInstitutions") == 0) then
-		player:PrintToPlayer(string.format("Institutions : Please wait. This will take a moment."),xi.msg.channel.NS_SAY)
-		player:unlockJob(0)
-		player:unlockJob(xi.job.DRG)
-		player:setPetName(xi.pet.type.WYVERN, math.random(1,32))
-		player:unlockJob(xi.job.PUP)
-		player:setPetName(xi.pet.type.AUTOMATON, math.random(118, 149))
-		player:capAllSkills()
-		AddAllSpells(player)
-		AddAllRolls(player)
-		AddAllAttachments(player)
-		AddAllMounts(player)
-		AddAllChairs(player)
-		AddAllTrusts(player)
-		SetZilart(player)
-		SetCoP(player)
-		player:PrintToPlayer(string.format("Institutions : Capped all combat/magic skills. Added all spells/songs, COR rolls, and PUP starter attachments. Unlocked all mounts and chairs."),xi.msg.channel.NS_SAY)
-		player:PrintToPlayer(string.format("Institutions : DRG and PUP pet names have been randomized. Visit Fouvia (DRG) or Abda-Lurabda (PUP) to change them."),xi.msg.channel.NS_SAY)
-		player:PrintToPlayer(string.format("Institutions : All Rise of the Zilart and Chains of Promathia missions completed."),xi.msg.channel.NS_SAY)
-		player:PrintToPlayer(string.format("Institutions : Please zone for all changes to display properly."),xi.msg.channel.NS_SAY)
-		player:setCharVar("HasTriggeredInstitutions", 1)
-		player:setCharVar("HasTriggeredRoZCoP", 1)
-	else
-		-- if (player:getCharVar("HasTriggeredRoZCoP") == 0) then
-			-- SetZilart(player)
-			-- SetCoP(player)
-			-- player:setCharVar("HasTriggeredRoZCoP", 1)
-		-- end
---		AddAllAttachments(player)
-		player:PrintToPlayer(string.format("Institutions : Looks like you've already had everything unlocked! Visit Fouvia (DRG) or Abda-Lurabda (PUP) to change your pet's name."),xi.msg.channel.NS_SAY)
-		player:PrintToPlayer(string.format("Institutions : You can trade me EXP rings to have them refilled in exchange for conquest points!"),xi.msg.channel.NS_SAY)
-	end
+    if (player:getCharVar("HasTriggeredInstitutions") == 0) then
+        player:PrintToPlayer(string.format("Institutions : Please wait. This will take a moment."),xi.msg.channel.NS_SAY)
+        player:unlockJob(0)
+        player:unlockJob(xi.job.DRG)
+        player:setPetName(xi.pet.type.WYVERN, math.random(1,32))
+        player:unlockJob(xi.job.PUP)
+        player:setPetName(xi.pet.type.AUTOMATON, math.random(118, 149))
+        player:capAllSkills()
+        AddAllSpells(player)
+        AddAllRolls(player)
+        AddAllAttachments(player)
+        AddAllMounts(player)
+        AddAllChairs(player)
+        AddAllTrusts(player)
+        SetZilart(player)
+        SetCoP(player)
+        player:PrintToPlayer(string.format("Institutions : Capped all combat/magic skills. Added all spells/songs, COR rolls, and PUP starter attachments. Unlocked all mounts and chairs."),xi.msg.channel.NS_SAY)
+        player:PrintToPlayer(string.format("Institutions : DRG and PUP pet names have been randomized. Visit Fouvia (DRG) or Abda-Lurabda (PUP) to change them."),xi.msg.channel.NS_SAY)
+        player:PrintToPlayer(string.format("Institutions : All Rise of the Zilart and Chains of Promathia missions completed."),xi.msg.channel.NS_SAY)
+        player:PrintToPlayer(string.format("Institutions : Please zone for all changes to display properly."),xi.msg.channel.NS_SAY)
+        player:setCharVar("HasTriggeredInstitutions", 1)
+        player:setCharVar("HasTriggeredRoZCoP", 1)
+    else
+        -- if (player:getCharVar("HasTriggeredRoZCoP") == 0) then
+            -- SetZilart(player)
+            -- SetCoP(player)
+            -- player:setCharVar("HasTriggeredRoZCoP", 1)
+        -- end
+--      AddAllAttachments(player)
+        player:PrintToPlayer(string.format("Institutions : Looks like you've already had everything unlocked! Visit Fouvia (DRG) or Abda-Lurabda (PUP) to change your pet's name."),xi.msg.channel.NS_SAY)
+        player:PrintToPlayer(string.format("Institutions : You can trade me EXP rings to have them refilled in exchange for conquest points!"),xi.msg.channel.NS_SAY)
+    end
 end)
 
 m:addOverride(string.format("xi.zones.Celennia_Memorial_Library.npcs.%s.onTrade", npcToReplaceName), function(player, npc, trade)
-	local ringID = {10796, 11666, 14671, 15761, 15762, 15763, 15793, 15840, 26164, 27556, 28528, 28562, 28568, 28569}
-	local ringCPCost = {500, 450, 1500, 500, 750, 1500, 500, 1500, 1500, 1500, 600, 650, 1500, 1500}
+    local ringID = {10796, 11666, 14671, 15761, 15762, 15763, 15793, 15840, 26164, 27556, 28528, 28562, 28568, 28569}
+    local ringCPCost = {500, 450, 1500, 500, 750, 1500, 500, 1500, 1500, 1500, 600, 650, 1500, 1500}
 
-	local itemToReplenish = 0
-	local itemFound = false
-	local currentCP = player:getCP()
-	
-	for i = 1, 14 do
-		if (trade:hasItemQty(ringID[i], 1) and currentCP >= ringCPCost[i]) then
-			player:tradeComplete()
-			
-			player:delCP(ringCPCost[i])
-			player:addItem(ringID[i], 1)
-			player:PrintToPlayer(string.format("You exchanged %i Conquest Points to recharge your ring.", ringCPCost[i]),xi.msg.channel.SYSTEM_3)
-			player:messageSpecial(ID.text.ITEM_OBTAINED, ringID[i])
-		end
-	end
+    local itemToReplenish = 0
+    local itemFound = false
+    local currentCP = player:getCP()
+    
+    for i = 1, 14 do
+        if (trade:hasItemQty(ringID[i], 1) and currentCP >= ringCPCost[i]) then
+            player:tradeComplete()
+            
+            player:delCP(ringCPCost[i])
+            player:addItem(ringID[i], 1)
+            player:PrintToPlayer(string.format("You exchanged %i Conquest Points to recharge your ring.", ringCPCost[i]),xi.msg.channel.SYSTEM_3)
+            player:messageSpecial(ID.text.ITEM_OBTAINED, ringID[i])
+        end
+    end
 end)
 
 return m 
