@@ -353,12 +353,10 @@ void CMagicState::ApplyEnmity(CBattleEntity* PTarget, int ce, int ve)
     {
         ce = 0;
     }
-    if (m_PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_DIVINE_EMBLEM) &&
-       (m_PSpell->getSpellFamily() == SPELLFAMILY_HOLY || m_PSpell->getSpellFamily() == SPELLFAMILY_BANISH ||
-        m_PSpell->getSpellFamily() == SPELLFAMILY_BANISHGA))
+    if (m_PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_DIVINE_EMBLEM) && m_PSpell->getSkillType() == SKILL_DIVINE_MAGIC)
     {
-        ve = ve * (1.0f + (m_PEntity->getMod(Mod::DIVINE_ENMITY_BONUS) / 100.0f));
-        ce = ce * (1.0f + (m_PEntity->getMod(Mod::DIVINE_ENMITY_BONUS) / 100.0f));
+        ve = ve * (1.0f + (m_PEntity->StatusEffectContainer->GetStatusEffect(EFFECT_DIVINE_EMBLEM)->GetPower() / 100.0f));
+        ce = ce * (1.0f + (m_PEntity->StatusEffectContainer->GetStatusEffect(EFFECT_DIVINE_EMBLEM)->GetPower() / 100.0f));
     }
 
     if (PTarget != nullptr)
@@ -410,6 +408,12 @@ void CMagicState::ApplyEnmity(CBattleEntity* PTarget, int ce, int ve)
     if (m_PSpell->isNa())
     {
         m_PEntity->delModifier(Mod::ENMITY, -(m_PEntity->getMod(Mod::DIVINE_BENISON) >> 1)); // Half of divine benison mod amount = -enmity
+    }
+    if (m_PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_DIVINE_EMBLEM) &&
+        m_PSpell->getSkillType() == SKILL_DIVINE_MAGIC &&
+        enmityApplied)
+    {
+        m_PEntity->StatusEffectContainer->DelStatusEffect(EFFECT_DIVINE_EMBLEM);
     }
     // Caldera TODO: Handle this during spell cast after the bonus is applied?
     if (m_PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_CASCADE) && m_PSpell->getSpellGroup() == SPELLGROUP_BLACK)

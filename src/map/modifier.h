@@ -366,15 +366,22 @@ enum class Mod
     GILFINDER         = 897,  // Gilfinder, duh
 
     // Paladin
-    HOLY_CIRCLE_DURATION   = 857, // Holy Circle extended duration in seconds
-    RAMPART_DURATION       = 92,  // Rampart duration in seconds
-    ABSORB_PHYSDMG_TO_MP   = 426, // Absorbs a percentage of physical damage taken to MP.
-    SHIELD_MASTERY_TP      = 485, // Shield mastery TP bonus when blocking with a shield
-    SENTINEL_EFFECT        = 837, // Sentinel effect in percents
-    SHIELD_DEF_BONUS       = 905, // Shield Defense Bonus
-    COVER_TO_MP            = 965, // Converts a successful cover's phsyical damage to MP
-    COVER_MAGIC_AND_RANGED = 966, // Redirects ranged and single target magic attacks to the cover ability user
-    COVER_DURATION         = 967, // Increases Cover Duration
+    HOLY_CIRCLE_DURATION   = 857,  // Holy Circle extended duration in seconds
+    RAMPART_DURATION       = 92,   // Rampart duration in seconds
+    ABSORB_PHYSDMG_TO_MP   = 426,  // Absorbs a percentage of physical damage taken to MP.
+    SHIELD_MASTERY_TP      = 485,  // Shield mastery TP bonus when blocking with a shield
+    SENTINEL_EFFECT        = 837,  // Sentinel effect in percents
+    SHIELD_DEF_BONUS       = 905,  // Shield Defense Bonus
+    COVER_TO_MP            = 965,  // Converts a successful cover's phsyical damage to MP
+    COVER_MAGIC_AND_RANGED = 966,  // Redirects ranged and single target magic attacks to the cover ability user
+    COVER_DURATION         = 967,  // Increases Cover Duration
+    ENHANCES_CHIVALRY      = 1061, // Enhances "Chivalry" effect (increases the base TP modifier by the provided value / 100, e.g. mod value 5 = +0.05)
+    ENHANCES_DIVINE_EMBLEM = 1062, // Enhances "Divine Emblem" effect/"Divine Emblem" + (increases the ability's special enmity bonus by the provided value)
+    ENHANCES_FEALTY        = 1063, // Enhances "Fealty" effect (increases Fealty's duration by 4 seconds per Fealty merit)
+    ENHANCES_IRON_WILL     = 1064, // Enhances "Iron Will" effect (adds +3% Fast Cast per Iron Will merit to Rampart)
+    ENHANCES_GUARDIAN      = 1065, // Enhances "Guardian" effect (increases Sentinel's duration by 2 seconds per Guardian merit)
+    PALISADE_BLOCK_BONUS   = 1066, // Increases base block rate while under the effects of Palisade (additive, not multiplicative)
+    REPRISAL_BLOCK_BONUS   = 1067, // Increases block rate while under the effects of Reprisal (multiplicative, not additive)
 
     // Dark Knight
     ARCANE_CIRCLE_DURATION = 858, // Arcane Circle extended duration in seconds
@@ -904,7 +911,7 @@ enum class Mod
     // 888
     // 936
     //
-    // SPARE = 1047, and onward
+    // SPARE = 1068, and onward
 
     // Caldera custom Mod IDs
     FOOD_EVAP                       = 1901, // Evasion +% from food
@@ -1041,7 +1048,6 @@ enum class Mod
     PET_BREATH                      = 3007, // Increases effects of Pet Breath moves
     CALL_BEAST_RECAST               = 3008, // "Call Beast" Ability Delay
     SHIELD_BASH_DISPEL              = 3009, // Shield Bash: Adds Dispel
-    DIVINE_ENMITY_BONUS             = 3010, // Divine Magic Special Enmity Bonus
     DARK_MAGIC_CAST                 = 3011, // Dark Magic Casting Time -%
     LAST_RESORT_DEF                 = 3012, // Last Resort Defense Penalty -%
     NETHER_VOID_BONUS               = 3013, // Nether Void Absorb Bonus

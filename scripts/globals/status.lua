@@ -1247,6 +1247,15 @@ xi.mod =
     -- Black Mage
     ENH_ELEMENTAL_SEAL              = 756,  -- Adds a Magic Damage bonus to Elemental Seal
 
+    -- Paladin
+    ENHANCES_CHIVALRY               = 1061, -- Enhances "Chivalry" effect (increases the base TP modifier by the provided value / 100, e.g. mod value 5 = +0.05)
+    ENHANCES_DIVINE_EMBLEM          = 1062, -- Enhances "Divine Emblem" effect/"Divine Emblem" + (increases the ability's special enmity bonus by the provided value)
+    ENHANCES_FEALTY                 = 1063, -- Enhances "Fealty" effect (increases Fealty's duration by 4 seconds per Fealty merit)
+    ENHANCES_IRON_WILL              = 1064, -- Enhances "Iron Will" effect (adds +3% Fast Cast per Iron Will merit to Rampart)
+    ENHANCES_GUARDIAN               = 1065, -- Enhances "Guardian" effect (increases Sentinel's duration by 2 seconds per Guardian merit)
+    PALISADE_BLOCK_BONUS            = 1066, -- Increases base block rate while under the effects of Palisade (additive, not multiplicative)
+    REPRISAL_BLOCK_BONUS            = 1067, -- Increases block rate while under the effects of Reprisal (multiplicative, not additive)
+
     -- Dragoon
     WYVERN_LVL_BONUS                = 1043, -- Wyvern: Lv.+ (Increases wyvern's base level above 99)
 
@@ -1859,7 +1868,6 @@ xi.mod =
     PET_BREATH                      = 3007, -- Increases effects of Pet Breath moves
     CALL_BEAST_RECAST               = 3008, -- "Call Beast" Ability Delay
     SHIELD_BASH_DISPEL              = 3009, -- Shield Bash: Adds Dispel
-    DIVINE_ENMITY_BONUS             = 3010, -- Divine Magic Special Enmity Bonus
     DARK_MAGIC_CAST                 = 3011, -- Dark Magic Casting Time -%
     LAST_RESORT_DEF                 = 3012, -- Last Resort Defense Penalty -%
     NETHER_VOID_BONUS               = 3013, -- Nether Void Absorb Bonus
