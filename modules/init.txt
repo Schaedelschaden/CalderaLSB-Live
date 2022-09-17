@@ -36,6 +36,7 @@
 #
 # Live example:
 
+custom/lua/caldera_npc_module
 custom/commands/Caldera_commands
 custom/lua/test_npcs_in_gm_home.lua
 
