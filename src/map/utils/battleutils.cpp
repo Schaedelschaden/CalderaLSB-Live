@@ -7747,7 +7747,6 @@ namespace battleutils
             return 0;
         }
 
-        bool   applyArts = true;
         uint32 base      = PSpell->getRecastTime();
         int32  recast    = base;
         int32  recastCap = (int32)(base * 0.2f); // Maximum reduction is 80% of original recast
@@ -7760,7 +7759,7 @@ namespace battleutils
         }
 
         // Get Fast Cast reduction, caps at 80%/2 = 40% reduction in recast -- https://www.bg-wiki.com/ffxi/Fast_Cast
-        recast = (int32)(recast * ((100.0f - std::clamp((float)PEntity->getMod(Mod::FASTCAST) / 2.0f, 0.0f, 40.0f)) / 100.0f));
+        float fastCastReduction = (int32)(recast * ((100.0f - std::clamp((float)PEntity->getMod(Mod::FASTCAST) / 2.0f, 0.0f, 40.0f)) / 100.0f));
         // No known cap (limited by Inspiration merits + Futhark Trousers augment for a total retail cap value of 60%/2 = 30%)
         float inspirationRecastReduction = static_cast<float>(PEntity->getMod(Mod::INSPIRATION_FAST_CAST)) / 2.0f;
 

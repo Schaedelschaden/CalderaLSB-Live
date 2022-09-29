@@ -2221,8 +2221,10 @@ bool CBattleEntity::OnAttack(CAttackState& state, action_t& action)
                 attackRound.DeleteAttackSwing();
             }
         }
-
-        attackRound.DeleteAttackSwing();
+        else
+        {
+            attackRound.DeleteAttackSwing();
+        }
 
         if (list.actionTargets.size() == 8)
         {
