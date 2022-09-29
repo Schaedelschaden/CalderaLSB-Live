@@ -748,7 +748,7 @@ int connect_client(int listen_fd, sockaddr_in& client_address)
     fd = sAccept(listen_fd, (struct sockaddr*)&client_address, &len);
     if (fd == -1)
     {
-        ShowError("connect_client: accept failed (code %d)!", sErrno);
+        ShowError("connect_client: accept failed (code %d, listen_fd %d)!", sErrno, listen_fd);
         return -1;
     }
     if (fd == 0)
@@ -881,105 +881,6 @@ void do_close_tcp(int32 fd)
     {
         delete_session(fd);
     }
-}
-
-int socket_config_read(const char* cfgName)
-{
-    TracyZoneScoped;
-    char  line[1024] = {};
-    char  w1[1024]   = {};
-    char  w2[1024]   = {};
-    FILE* fp;
-
-    fp = fopen(cfgName, "r");
-    if (fp == nullptr)
-    {
-        ShowError("File not found: %s", cfgName);
-        return 1;
-    }
-
-    while (fgets(line, sizeof(line), fp))
-    {
-        if (line[0] == '/' && line[1] == '/')
-        {
-            continue;
-        }
-        if (sscanf(line, "%[^:]: %[^\r\n]", w1, w2) != 2)
-        {
-            continue;
-        }
-
-        if (!strcmpi(w1, "stall_time"))
-        {
-            stall_time = atoi(w2);
-        }
-        else if (!strcmpi(w1, "enable_ip_rules"))
-        {
-            ip_rules = config_switch(w2);
-        }
-        else if (!strcmpi(w1, "order"))
-        {
-            if (!strcmpi(w2, "deny,allow"))
-            {
-                access_order = ACO_DENY_ALLOW;
-            }
-            else if (!strcmpi(w2, "allow,deny"))
-            {
-                access_order = ACO_ALLOW_DENY;
-            }
-            else if (!strcmpi(w2, "mutual-failure"))
-            {
-                access_order = ACO_MUTUAL_FAILURE;
-            }
-        }
-        else if (!strcmpi(w1, "allow"))
-        {
-            AccessControl acc{};
-            if (access_ipmask(w2, &acc))
-            {
-                access_allow.push_back(acc);
-            }
-            else
-            {
-                ShowError("socket_config_read: Invalid ip or ip range '%s'!", line);
-            }
-        }
-        else if (!strcmpi(w1, "deny"))
-        {
-            AccessControl acc{};
-            if (access_ipmask(w2, &acc))
-            {
-                access_deny.push_back(acc);
-            }
-            else
-            {
-                ShowError("socket_config_read: Invalid ip or ip range '%s'!", line);
-            }
-        }
-        else if (!strcmpi(w1, "connect_interval"))
-        {
-            connect_interval = std::chrono::milliseconds(atoi(w2));
-        }
-        else if (!strcmpi(w1, "connect_count"))
-        {
-            connect_count = atoi(w2);
-        }
-        else if (!strcmpi(w1, "connect_lockout"))
-        {
-            connect_lockout = std::chrono::milliseconds(atoi(w2));
-        }
-        else if (!strcmpi(w1, "debug"))
-        {
-            access_debug = config_switch(w2);
-        }
-        else if (!strcmpi(w1, "import"))
-        {
-            socket_config_read(w2);
-        }
-    }
-
-    fclose(fp);
-    return 0;
 }
 
 ///

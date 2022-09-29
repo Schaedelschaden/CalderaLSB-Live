@@ -1545,7 +1545,7 @@ namespace charutils
                         }
                     }
                 }
-
+                luautils::OnItemDrop(PChar, PItem);
                 delete PItem;
             }
         }
@@ -1687,11 +1687,11 @@ namespace charutils
                 PChar->m_EquipFlag = 0;
                 for (uint8 i = 0; i < 16; ++i)
                 {
-                    CItem* PItem = PChar->getEquip((SLOTTYPE)i);
+                    CItem* PSlotItem = PChar->getEquip(static_cast<SLOTTYPE>(i));
 
-                    if ((PItem != nullptr) && PItem->isType(ITEM_EQUIPMENT))
+                    if ((PSlotItem != nullptr) && PSlotItem->isType(ITEM_EQUIPMENT))
                     {
-                        PChar->m_EquipFlag |= ((CItemEquipment*)PItem)->getScriptType();
+                        PChar->m_EquipFlag |= (static_cast<CItemEquipment*>(PSlotItem))->getScriptType();
                     }
                 }
             }
@@ -2323,6 +2323,109 @@ namespace charutils
         }
     }
 
+    void SaveJobChangeGear(CCharEntity* PChar)
+    {
+        if (PChar == nullptr)
+        {
+            return;
+        }
+
+        const char* Query = "REPLACE INTO char_equip_saved SET \
+                                    charid = %u, \
+                                    jobid = %u, \
+                                    main = %u, \
+                                    sub = %u, \
+                                    ranged = %u, \
+                                    ammo = %u, \
+                                    head = %u, \
+                                    body = %u, \
+                                    hands = %u, \
+                                    legs = %u, \
+                                    feet = %u, \
+                                    neck = %u, \
+                                    waist = %u, \
+                                    ear1 = %u, \
+                                    ear2 = %u, \
+                                    ring1 = %u, \
+                                    ring2 = %u, \
+                                    back = %u;";
+
+        auto getEquipIdFromSlot = [](CCharEntity* PChar, SLOTTYPE slot) -> uint16
+        {
+            return (PChar->getEquip(slot) != nullptr) ? PChar->getEquip(slot)->getID() : 0;
+        };
+
+        uint16 main   = getEquipIdFromSlot(PChar, SLOT_MAIN);
+        uint16 sub    = getEquipIdFromSlot(PChar, SLOT_SUB);
+        uint16 ranged = getEquipIdFromSlot(PChar, SLOT_RANGED);
+        uint16 ammo   = getEquipIdFromSlot(PChar, SLOT_AMMO);
+        uint16 head   = getEquipIdFromSlot(PChar, SLOT_HEAD);
+        uint16 body   = getEquipIdFromSlot(PChar, SLOT_BODY);
+        uint16 hands  = getEquipIdFromSlot(PChar, SLOT_HANDS);
+        uint16 legs   = getEquipIdFromSlot(PChar, SLOT_LEGS);
+        uint16 feet   = getEquipIdFromSlot(PChar, SLOT_FEET);
+        uint16 neck   = getEquipIdFromSlot(PChar, SLOT_NECK);
+        uint16 waist  = getEquipIdFromSlot(PChar, SLOT_WAIST);
+        uint16 ear1   = getEquipIdFromSlot(PChar, SLOT_EAR1);
+        uint16 ear2   = getEquipIdFromSlot(PChar, SLOT_EAR2);
+        uint16 ring1  = getEquipIdFromSlot(PChar, SLOT_RING1);
+        uint16 ring2  = getEquipIdFromSlot(PChar, SLOT_RING2);
+        uint16 back   = getEquipIdFromSlot(PChar, SLOT_BACK);
+
+        sql->Query(Query, PChar->id, PChar->GetMJob(), main, sub, ranged, ammo,
+                   head, body, hands, legs, feet, neck, waist, ear1, ear2, ring1,
+                   ring2, back);
+    }
+
+    void LoadJobChangeGear(CCharEntity* PChar)
+    {
+        if (PChar == nullptr)
+        {
+            return;
+        }
+
+        const char* Query = "SELECT main, sub, ranged, ammo, head, body, hands, legs, feet, neck, waist, ear1, ear2, ring1, ring2, back FROM char_equip_saved AS equip WHERE charid = %u AND jobid = %u;";
+
+        if (sql->Query(Query, PChar->id, PChar->GetMJob()) == SQL_SUCCESS && sql->NumRows() != 0 && sql->NextRow() == SQL_SUCCESS)
+        {
+            for (uint8 equipSlot = SLOT_MAIN; equipSlot <= SLOT_BACK; equipSlot++)
+            {
+                uint16 itemId = sql->GetUIntData(equipSlot);
+
+                if (itemId > 0)
+                {
+                    for (int container = LOC_INVENTORY; container <= LOC_WARDROBE8; container++)
+                    {
+                        bool found = false;
+
+                        if (container == LOC_INVENTORY || (container >= LOC_WARDROBE && container <= LOC_WARDROBE8))
+                        {
+                            for (uint8 slot = 0; slot < PChar->getStorage(container)->GetSize(); slot++)
+                            {
+                                CItem* PItem  = PChar->getStorage(container)->GetItem(slot);
+                                auto*  PEquip = dynamic_cast<CItemEquipment*>(PItem);
+
+                                if ((PItem != nullptr && PItem->getID() == itemId && PEquip != nullptr) &&
+                                    (PEquip != PChar->getEquip(static_cast<SLOTTYPE>(equipSlot - 1)) &&
+                                     PEquip != PChar->getEquip(static_cast<SLOTTYPE>(equipSlot + 1))))
+                                {
+                                    found = true;
+                                    charutils::EquipItem(PChar, PItem->getSlotID(), equipSlot, static_cast<CONTAINER_ID>(container));
+                                    break;
+                                }
+                            }
+
+                            if (found)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     void EquipItem(CCharEntity* PChar, uint8 slotID, uint8 equipSlotID, uint8 containerID)
     {
         if (PChar == nullptr || PChar->getStorage(containerID) == nullptr)
@@ -2568,10 +2671,11 @@ namespace charutils
         }
 
         // add in melee ws
-        PItem                       = dynamic_cast<CItemWeapon*>(PChar->getEquip(SLOT_MAIN));
-        uint8       skill           = PItem ? PItem->getSkillType() : (uint8)SKILL_HAND_TO_HAND;
-        const auto& WeaponSkillList = battleutils::GetWeaponSkills(skill);
-        for (auto&& PSkill : WeaponSkillList)
+        PItem       = dynamic_cast<CItemWeapon*>(PChar->getEquip(SLOT_MAIN));
+        uint8 skill = PItem ? PItem->getSkillType() : (uint8)SKILL_HAND_TO_HAND;
+
+        const auto& MeleeWeaponSkillList = battleutils::GetWeaponSkills(skill);
+        for (auto&& PSkill : MeleeWeaponSkillList)
         {
             if (battleutils::CanUseWeaponskill(PChar, PSkill) || PSkill->getID() == main_ws || (isInDynamis && (PSkill->getID() == main_ws_dyn)))
             {
@@ -2583,9 +2687,9 @@ namespace charutils
         PItem = dynamic_cast<CItemWeapon*>(PChar->getEquip(SLOT_RANGED));
         if (PItem != nullptr && PItem->isType(ITEM_WEAPON) && PItem->getSkillType() != SKILL_THROWING)
         {
-            skill                       = PItem ? PItem->getSkillType() : 0;
-            const auto& WeaponSkillList = battleutils::GetWeaponSkills(skill);
-            for (auto&& PSkill : WeaponSkillList)
+            skill                             = PItem ? PItem->getSkillType() : 0;
+            const auto& RangedWeaponSkillList = battleutils::GetWeaponSkills(skill);
+            for (auto&& PSkill : RangedWeaponSkillList)
             {
                 if ((battleutils::CanUseWeaponskill(PChar, PSkill)) || PSkill->getID() == range_ws || (isInDynamis && (PSkill->getID() == range_ws_dyn)))
                 {
@@ -2899,7 +3003,19 @@ namespace charutils
             // Add 79 to get the modifier ID
             skillBonus += PChar->getMod(static_cast<Mod>(i + 79));
 
-            PChar->WorkingSkills.rank[i] = battleutils::GetSkillRank((SKILLTYPE)i, PChar->GetMJob());
+            uint8 mainSkillRank = battleutils::GetSkillRank((SKILLTYPE)i, PChar->GetMJob());
+            uint8 subSkillRank  = battleutils::GetSkillRank((SKILLTYPE)i, PChar->GetSJob());
+
+            PChar->WorkingSkills.rank[i] = mainSkillRank;
+
+            if (mainSkillRank != 0)
+            {
+                PChar->RealSkills.rank[i] = mainSkillRank;
+            }
+            else
+            {
+                PChar->RealSkills.rank[i] = subSkillRank;
+            }
 
             if (MaxMSkill != 0)
             {
@@ -4180,6 +4296,22 @@ namespace charutils
 
         float rawBonus = 0;
 
+        // COMMITMENT from Capacity Bands
+
+        if (PChar->StatusEffectContainer->GetStatusEffect(EFFECT_COMMITMENT) && PChar->loc.zone->GetRegionID() != REGION_TYPE::ABYSSEA)
+        {
+            CStatusEffect* commitment = PChar->StatusEffectContainer->GetStatusEffect(EFFECT_COMMITMENT);
+            int16          percentage = commitment->GetPower();
+            int16          cap        = commitment->GetSubPower();
+            rawBonus += std::clamp<int32>(((capacityPoints * percentage) / 100), 0, cap);
+            commitment->SetSubPower(cap -= rawBonus);
+
+            if (cap <= 0)
+            {
+                PChar->StatusEffectContainer->DelStatusEffect(EFFECT_COMMITMENT);
+            }
+        }
+
         // Mod::CAPACITY_BONUS is currently used for JP Gifts, and can easily be used elsewhere
         // This value is stored as uint, as a whole number percentage value
         rawBonus += PChar->getMod(Mod::CAPACITY_BONUS);
@@ -4191,13 +4323,12 @@ namespace charutils
             rawBonus += 2 * (roeutils::RoeSystem.unityLeaderRank[unity - 1] - 1);
         }
 
-        // RoE Objectives (There might be a formulaic way to do some of these)
-        // Nation Mission Completion (10%)
-        for (uint16 nationRecord = 1332; nationRecord <= 1372; nationRecord += 20)
+        // RoE Objectives
+        for (auto const& recordValue : roeCapacityBonusRecords)
         {
-            if (roeutils::GetEminenceRecordCompletion(PChar, nationRecord))
+            if (roeutils::GetEminenceRecordCompletion(PChar, recordValue.first))
             {
-                rawBonus += 10;
+                rawBonus += recordValue.second;
             }
         }
 

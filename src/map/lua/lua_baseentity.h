@@ -32,6 +32,7 @@ class CLuaInstance;
 class CLuaItem;
 class CLuaSpell;
 class CLuaStatusEffect;
+class CLuaTradeContainer;
 class CLuaZone;
 
 class CLuaBaseEntity
@@ -78,7 +79,7 @@ public:
 
     // Packets, Events, and Flags
     void injectPacket(std::string const& filename); // Send the character a packet kept in a file
-    void injectActionPacket(uint16 action, uint16 anim, uint16 spec, uint16 react, uint16 message);
+    void injectActionPacket(uint32 inTargetID, uint16 inCategory, uint16 inAnimationID, uint16 inSpecEffect, uint16 inReaction, uint16 inMessage, uint16 inActionParam, uint16 inParam);
     void entityVisualPacket(std::string const& command, sol::object const& entity);
     void entityAnimationPacket(const char* command, sol::object const& target);
 
@@ -240,6 +241,7 @@ public:
     uint8 getFreeSlotsCount(sol::object const& locID);         // Gets value of free slots in Entity inventory
     void  confirmTrade();                                      // Complete trade with an npc, only removing confirmed items
     void  tradeComplete();                                     // Complete trade with an npc
+    auto  getTrade() -> std::optional<CLuaTradeContainer>;
 
     // Equipping
     bool canEquipItem(uint16 itemID, sol::object const& chkLevel); // returns true if the player is able to equip the item
@@ -398,9 +400,10 @@ public:
     uint8 getMeritCount();
     void  setMerits(uint8 numPoints); // set merits (testing only!)
 
-    uint8 getJobPointLevel(uint16 jpType); // Returns Value of Job Point Type
-    void  setJobPoints(uint16 amount);     // Set Job Points for current job
-    void  setCapacityPoints(uint16 amount);
+    uint16 getSpentJobPoints();
+    uint8  getJobPointLevel(uint16 jpType); // Returns Value of Job Point Type
+    void   setJobPoints(uint16 amount);     // Set Job Points for current job
+    void   setCapacityPoints(uint16 amount);
 
     uint32 getGil();
     void   addGil(int32 gil);
@@ -427,14 +430,15 @@ public:
     auto addGuildPoints(uint8 guildID, uint8 slotID) -> std::tuple<uint8, int16>;
 
     // Health and Status
-    int32 getHP();                     // Returns Entity Health
-    uint8 getHPP();                    // Returns Entity Health %
-    int32 getMaxHP();                  // Get max hp of entity
-    int32 getBaseHP();                 // Returns Entity base Health before modifiers
-    int32 addHP(int32 hpAdd);          // Modify hp of Entity +/-
-    void  setHP(int32 value);          // Set hp of Entity to value
-    int32 restoreHP(int32 restoreAmt); // Modify hp of Entity, but check if alive first
-    void  delHP(int32 delAmt);         // Subtract hp of Entity
+    int32 getHP();                         // Returns Entity Health
+    uint8 getHPP();                        // Returns Entity Health %
+    int32 getMaxHP();                      // Get max hp of entity
+    int32 getBaseHP();                     // Returns Entity base Health before modifiers
+    int32 addHP(int32 hpAdd);              // Modify hp of Entity +/-
+    int32 addHPLeaveSleeping(int32 hpAdd); // Modify hp of Entity +/- but do not awaken the Entity
+    void  setHP(int32 value);              // Set hp of Entity to value
+    int32 restoreHP(int32 restoreAmt);     // Modify hp of Entity, but check if alive first
+    void  delHP(int32 delAmt);             // Subtract hp of Entity
     void  takeDamage(int32 damage, sol::object const& attacker, sol::object const& atkType,
                      sol::object const& dmgType, sol::object const& flags); // Takes damage from the provided attacker
     void  hideHP(bool value);
@@ -570,7 +574,10 @@ public:
     void recalculateStats();
     bool checkImbuedItems();
 
-    bool isDualWielding(); // Checks if the battle entity is dual wielding
+    bool   isDualWielding();     // Checks if the battle entity is dual wielding
+    bool   isUsingH2H();         // Checks if the battle entity is using h2h
+    uint16 getBaseDelay();       // get base delay of entity, melee only
+    uint16 getBaseRangedDelay(); // get base delay of entity, ranged only
 
     float checkLiementAbsorb(uint16 damageType); // return 1.0 if did not absorb, return >= -1.0 if did absorb
 
@@ -750,7 +757,7 @@ public:
     bool   isNM();
 
     uint8  getModelSize();
-    void   setMobFlags(uint32 flags, uint32 mobid); // Used to manipulate the mob's flags for testing.
+    void   setMobFlags(uint32 flags, sol::object const& mobId); // Used to manipulate the mob's flags, such as changing size.
     uint32 getMobFlags();
 
     void setNpcFlags(uint32 flags);

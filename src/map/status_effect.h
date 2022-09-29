@@ -39,12 +39,12 @@ enum EFFECTFLAG
     EFFECTFLAG_NONE            = 0x0000000,
     EFFECTFLAG_DISPELABLE      = 0x0000001,
     EFFECTFLAG_ERASABLE        = 0x0000002,
-    EFFECTFLAG_ATTACK          = 0x0000004, // исчезает при нанесении урона
+    EFFECTFLAG_ATTACK          = 0x0000004, // disappears upon attacking
     EFFECTFLAG_EMPATHY         = 0X0000008, // effect can be copied to wyvern by use of merited Spirit Link
-    EFFECTFLAG_DAMAGE          = 0x0000010, // исчезает при получении урона
-    EFFECTFLAG_DEATH           = 0x0000020, // исчезает при смерти
-    EFFECTFLAG_MAGIC_BEGIN     = 0x0000040, // исчезает перед началом чтения заклинания
-    EFFECTFLAG_MAGIC_END       = 0x0000080, // исчезает после прочтения заклинания
+    EFFECTFLAG_DAMAGE          = 0x0000010, // disappears upon being attacked
+    EFFECTFLAG_DEATH           = 0x0000020, // disappears upon death/ko
+    EFFECTFLAG_MAGIC_BEGIN     = 0x0000040, // disappears upon spellcasting start
+    EFFECTFLAG_MAGIC_END       = 0x0000080, // disappears upon spellcasting complete
     EFFECTFLAG_ON_ZONE         = 0x0000100,
     EFFECTFLAG_NO_LOSS_MESSAGE = 0x0000200, // Suppress effect worn off message.
     EFFECTFLAG_INVISIBLE       = 0x0000400, // invisible effect
@@ -671,7 +671,7 @@ enum EFFECT
     EFFECT_NEGATE_VIRUS            = 608,
     EFFECT_NEGATE_CURSE            = 609,
     EFFECT_NEGATE_CHARM            = 610,
-    EFFECT_MAGIC_EVASION_BOOST_II  = 611,
+    EFFECT_MAGIC_EVASION_BOOST     = 611,
     EFFECT_COLURE_ACTIVE           = 612,
     EFFECT_MUMORS_RADIANCE         = 613,
     EFFECT_ULLEGORES_GLOOM         = 614,

@@ -50,6 +50,19 @@ enum class EMobDifficulty : uint8
     MAX
 };
 
+// Capacity Bonuses applied based on RoE Completion
+// TODO: Add RoV Completion and Reive bonuses once implemented
+const std::vector<std::pair<uint16, uint8>> roeCapacityBonusRecords = {
+    { 1332, 10 }, // San d'Oria Missions (10%)
+    { 1352, 10 }, // Bastok Missions (10%)
+    { 1372, 10 }, // Windurst Missions (10%)
+    { 1392, 10 }, // Zilart Missions (10%)
+    { 1400, 10 }, // Chains of Promathia Missions (10%)
+    { 1409, 10 }, // Wings of the Goddess Missions (10%)
+    { 1415, 10 }, // Treasures of Aht Urhgan Missions (10%)
+    { 1430, 10 }, // Seekers of Adoulin Missions (10%
+};
+
 namespace charutils
 {
     void LoadExpTable();
@@ -102,6 +115,8 @@ namespace charutils
     void   DropItem(CCharEntity* PChar, uint8 container, uint8 slotID, int32 quantity, uint16 ItemID);
     void   CheckValidEquipment(CCharEntity* PChar);
     void   CheckEquipLogic(CCharEntity* PChar, SCRIPTTYPE ScriptType, uint32 param);
+    void   SaveJobChangeGear(CCharEntity* PChar);
+    void   LoadJobChangeGear(CCharEntity* PChar);
     void   EquipItem(CCharEntity* PChar, uint8 slotID, uint8 equipSlotID, uint8 containerID);
     void   UnequipItem(CCharEntity* PChar, uint8 equipSlotID,
                        bool update = true); // call with update == false to prevent calls to UpdateHealth() - used for correct handling of stats on armor swaps

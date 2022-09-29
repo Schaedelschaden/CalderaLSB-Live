@@ -178,6 +178,7 @@ namespace luautils
         lua.set_function("UpdateNMSpawnPoint", &luautils::UpdateNMSpawnPoint);
         lua.set_function("SetDropRate", &luautils::SetDropRate);
         lua.set_function("NearLocation", &luautils::NearLocation);
+        lua.set_function("GetFurthestValidPosition", &luautils::GetFurthestValidPosition);
         lua.set_function("Terminate", &luautils::Terminate);
         lua.set_function("GetReadOnlyItem", &luautils::GetReadOnlyItem);
         lua.set_function("GetAbility", &luautils::GetAbility);
@@ -275,6 +276,11 @@ namespace luautils
         TracyReportLuaMemory(lua.lua_state());
 
         return 0;
+    }
+
+    void cleanup()
+    {
+        moduleutils::CleanupLuaModules();
     }
 
     /************************************************************************
@@ -779,6 +785,7 @@ namespace luautils
                             {
                                 auto name = innerKey.as<std::string>();
                                 auto num  = innerValue.as<int32>();
+
                                 if (num == -1)
                                 {
                                     bool found = false;
@@ -801,7 +808,6 @@ namespace luautils
                                     }
                                     else if (outerName == "npc")
                                     {
-                                        bool found = false;
                                         PZone->ForEachNpc([&](CNpcEntity* PNpc)
                                         {
                                             if (!found)
@@ -817,6 +823,7 @@ namespace luautils
                                             }
                                         });
                                     }
+
                                     if (!found)
                                     {
                                         ShowError(fmt::format("Could not complete id lookup for {}.ID.{}.{}", zoneName, outerName, name))
@@ -2541,6 +2548,30 @@ namespace luautils
         return 0;
     }
 
+    // Trigger Code on an item when it has been dropped
+    int32 OnItemDrop(CBaseEntity* PUser, CItem* PItem)
+    {
+        TracyZoneScoped;
+
+        auto filename = fmt::format("./scripts/globals/items/{}.lua", PItem->getName());
+
+        sol::function onItemDrop = GetCacheEntryFromFilename(filename)["onItemDrop"].get<sol::function>();
+        if (!onItemDrop.valid())
+        {
+            return -1;
+        }
+
+        auto result = onItemDrop(CLuaBaseEntity(PUser), CLuaItem(PItem));
+        if (!result.valid())
+        {
+            sol::error err = result;
+            ShowError("luautils::onItemDrop: %s", err.what());
+            return -1;
+        }
+
+        return 0;
+    }
+
     // Check for gear sets  (e.g Set: enhances haste effect)
     int32 CheckForGearSet(CBaseEntity* PTarget)
     {
@@ -2666,8 +2697,6 @@ namespace luautils
             return -1;
         }
 
-        PTarget->PAI->EventHandler.triggerListener("MAGIC_TAKE", CLuaBaseEntity(PTarget), CLuaBaseEntity(PCaster), CLuaSpell(PSpell));
-
         sol::function onMagicHit = getEntityCachedFunction(PTarget, "onMagicHit");
         if (!onMagicHit.valid())
         {
@@ -2705,6 +2734,28 @@ namespace luautils
         }
 
         return result.get_type(0) == sol::type::number ? result.get<int32>(0) : 0;
+    }
+
+    bool OnTrustSpellCastCheckBattlefieldTrusts(CBattleEntity* PCaster) // Check if trust count would go over the limit when cast finishes (for simultaneous multi-party casts
+    {
+        TracyZoneScoped;
+
+        sol::function checkBattlefieldTrustCount = lua["xi"]["trust"]["checkBattlefieldTrustCount"];
+
+        if (!checkBattlefieldTrustCount.valid())
+        {
+            return false;
+        }
+
+        auto result = checkBattlefieldTrustCount(CLuaBaseEntity(PCaster));
+        if (!result.valid())
+        {
+            sol::error err = result;
+            ShowError("luautils::OnTrustSpellCastCheckBattlefieldTrusts: %s", err.what());
+            return 0;
+        }
+
+        return result.get_type(0) == sol::type::boolean ? result.get<bool>(0) : true;
     }
 
     int32 OnMobInitialize(CBaseEntity* PMob)
@@ -3688,7 +3739,7 @@ namespace luautils
         auto onMagicCastingCheck = getSpellCachedFunction(PSpell, "onMagicCastingCheck");
         if (!onMagicCastingCheck.valid())
         {
-            ShowWarning("luautils::onMagicCastingCheck");
+            ShowWarning("luautils::onMagicCastingCheck, spell (%s) has no lua file, it cannot be cast.", PSpell->getName());
             return 47;
         }
 
@@ -3862,6 +3913,60 @@ namespace luautils
         }
 
         return result.get_type(0) == sol::type::number ? result.get<int32>(0) : 0;
+    }
+
+    int32 OnSteal(CBattleEntity* PChar, CBattleEntity* PMob, CAbility* PAbility, action_t* action)
+    {
+        TracyZoneScoped;
+
+        if (PChar == nullptr || PMob == nullptr)
+        {
+            return 0;
+        }
+
+        sol::function onSteal = getEntityCachedFunction(PMob, "onSteal");
+        if (!onSteal.valid())
+        {
+            return 0;
+        }
+
+        auto result = onSteal(CLuaBaseEntity(PChar), CLuaBaseEntity(PMob), CLuaAbility(PAbility), CLuaAction(action));
+        if (!result.valid())
+        {
+            sol::error err = result;
+            ShowError("luautils::onSteal %s", err.what());
+            return 0;
+        }
+
+        uint16 retVal = result.get_type(0) == sol::type::number ? result.get<uint16>(0) : 0;
+        if (retVal > 0)
+        {
+            return retVal;
+        }
+
+        return 0;
+    }
+
+    bool OnCanUseSpell(CBattleEntity* PChar, CSpell* Spell) // triggers when CanUseSpell is invoked on spell.cpp for PCs only
+    {
+        TracyZoneScoped;
+
+        sol::function canUseSpellOverride = lua["xi"]["spells"]["canUseSpellOverride"];
+
+        if (!canUseSpellOverride.valid())
+        {
+            return false;
+        }
+
+        auto result = canUseSpellOverride(CLuaBaseEntity(PChar), CLuaSpell(Spell));
+        if (!result.valid())
+        {
+            sol::error err = result;
+            ShowError("luautils::OnCanUseSpell: %s", err.what());
+            return 0;
+        }
+
+        return result.get_type(0) == sol::type::boolean ? result.get<bool>(0) : true;
     }
 
     void Terminate()
@@ -4567,6 +4672,26 @@ namespace luautils
         nearPos["z"]       = pos.z;
 
         return nearPos;
+    }
+
+    sol::table GetFurthestValidPosition(CLuaBaseEntity* fromTarget, float distance, float theta)
+    {
+        CBaseEntity* entity = fromTarget->GetBaseEntity();
+        position_t   pos    = nearPosition(entity->loc.p, distance, theta);
+
+        float validPos[3];
+        bool  success = entity->loc.zone->m_navMesh->findFurthestValidPoint(entity->loc.p, pos, validPos);
+        if (!success)
+        {
+            return sol::lua_nil;
+        }
+
+        sol::table outPos = lua.create_table();
+        outPos["x"]       = validPos[0];
+        outPos["y"]       = validPos[1];
+        outPos["z"]       = validPos[2];
+
+        return outPos;
     }
 
     void OnPlayerDeath(CCharEntity* PChar)

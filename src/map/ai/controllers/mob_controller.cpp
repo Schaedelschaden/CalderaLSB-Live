@@ -626,7 +626,7 @@ void CMobController::Move()
     }
     if (PMob->PAI->PathFind->IsFollowingScriptedPath() && PMob->PAI->CanFollowPath())
     {
-        PMob->PAI->PathFind->FollowPath();
+        PMob->PAI->PathFind->FollowPath(m_Tick);
         return;
     }
 
@@ -699,7 +699,7 @@ void CMobController::Move()
                     // path to the target if we don't have a path already
                     PMob->PAI->PathFind->PathInRange(PTarget->loc.p, attack_range - 0.2f, PATHFLAG_WALLHACK | PATHFLAG_RUN);
                 }
-                PMob->PAI->PathFind->FollowPath();
+                PMob->PAI->PathFind->FollowPath(m_Tick);
                 if (!PMob->PAI->PathFind->IsFollowingPath())
                 {
                     bool needToMove = false;
@@ -821,6 +821,11 @@ void CMobController::DoRoamTick(time_point tick)
         {
             FollowRoamPath();
         }
+        else if (PMob->PAI->PathFind->IsPatrolling())
+        {
+            PMob->PAI->PathFind->ResumePatrol();
+            FollowRoamPath();
+        }
         else if (m_Tick >= m_LastActionTime + std::chrono::milliseconds(PMob->getBigMobMod(MOBMOD_ROAM_COOL)))
         {
             // lets buff up or move around
@@ -849,11 +854,12 @@ void CMobController::DoRoamTick(time_point tick)
                     PMob->m_HiPCLvl     = 0;
                     PMob->m_HiPartySize = 0;
                     PMob->m_giveExp     = true;
+                    PMob->m_UsedSkillIds.clear();
                 }
             }
 
             // if I just disengaged check if I should despawn
-            if (PMob->IsFarFromHome())
+            if (!PMob->getMobMod(MOBMOD_DONT_ROAM_HOME) && PMob->IsFarFromHome())
             {
                 if (PMob->CanRoamHome() && PMob->PAI->PathFind->PathTo(PMob->m_SpawnPoint))
                 {
@@ -901,9 +907,10 @@ void CMobController::DoRoamTick(time_point tick)
                         CastSpell(spellID.value());
                     }
                 }
-                else if (PMob->m_roamFlags & ROAMFLAG_EVENT)
+                else if (PMob->m_roamFlags & ROAMFLAG_SCRIPTED)
                 {
                     // allow custom event action
+                    PMob->PAI->EventHandler.triggerListener("ROAM_ACTION", CLuaBaseEntity(PMob));
                     luautils::OnMobRoamAction(PMob);
                     m_LastActionTime = m_Tick;
                 }
@@ -966,7 +973,7 @@ void CMobController::FollowRoamPath()
     TracyZoneScoped;
     if (PMob->PAI->CanFollowPath())
     {
-        PMob->PAI->PathFind->FollowPath();
+        PMob->PAI->PathFind->FollowPath(m_Tick);
 
         CBattleEntity* PPet = PMob->PPet;
         if (PPet != nullptr && PPet->PAI->IsSpawned() && !PPet->PAI->IsEngaged())
@@ -993,7 +1000,7 @@ void CMobController::FollowRoamPath()
 
             // face spawn rotation if I just moved back to spawn
             // used by dynamis mobs, bcnm mobs etc
-            if ((PMob->m_roamFlags & ROAMFLAG_EVENT) && distance(PMob->loc.p, PMob->m_SpawnPoint) <= PMob->m_maxRoamDistance)
+            if (PMob->getMobMod(MOBMOD_ROAM_RESET_FACING) && distance(PMob->loc.p, PMob->m_SpawnPoint) <= PMob->m_maxRoamDistance)
             {
                 PMob->loc.p.rotation = PMob->m_SpawnPoint.rotation;
             }
@@ -1001,6 +1008,7 @@ void CMobController::FollowRoamPath()
 
         if (PMob->PAI->PathFind->OnPoint())
         {
+            PMob->PAI->EventHandler.triggerListener("PATH", CLuaBaseEntity(PMob));
             luautils::OnPath(PMob);
         }
     }

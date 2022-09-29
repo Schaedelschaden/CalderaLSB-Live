@@ -28,6 +28,7 @@
 #include "../ai/states/attack_state.h"
 #include "../ai/states/mobskill_state.h"
 #include "../ai/states/weaponskill_state.h"
+#include "../battlefield.h"
 #include "../conquest_system.h"
 #include "../enmity_container.h"
 #include "../entities/charentity.h"
@@ -285,7 +286,7 @@ bool CMobEntity::CanRoamHome()
 
 bool CMobEntity::CanRoam()
 {
-    return !(m_roamFlags & ROAMFLAG_EVENT) && PMaster == nullptr && (speed > 0 || (m_roamFlags & ROAMFLAG_WORM)) && getMobMod(MOBMOD_NO_MOVE) == 0;
+    return !(m_roamFlags & ROAMFLAG_SCRIPTED) && PMaster == nullptr && (speed > 0 || (m_roamFlags & ROAMFLAG_WORM)) && getMobMod(MOBMOD_NO_MOVE) == 0;
 }
 
 void CMobEntity::TapDeaggroTime()
@@ -712,15 +713,15 @@ void CMobEntity::OnMobSkillFinished(CMobSkillState& state, action_t& action)
     uint16 defaultMessage = PSkill->getMsg();
 
     bool first{ true };
-    for (auto&& PTarget : PAI->TargetFind->m_targets)
+    for (auto&& PTargetFound : PAI->TargetFind->m_targets)
     {
         actionList_t& list = action.getNewActionList();
 
-        list.ActionTargetID = PTarget->id;
+        list.ActionTargetID = PTargetFound->id;
 
         actionTarget_t& target = list.getNewActionTarget();
 
-        list.ActionTargetID = PTarget->id;
+        list.ActionTargetID = PTargetFound->id;
         target.reaction     = REACTION::HIT;
         target.speceffect   = SPECEFFECT::HIT;
         target.animation    = PSkill->getAnimationID();
@@ -740,18 +741,18 @@ void CMobEntity::OnMobSkillFinished(CMobSkillState& state, action_t& action)
 
             if (petType == PET_TYPE::AUTOMATON)
             {
-                damage = luautils::OnAutomatonAbility(PTarget, this, PSkill, PMaster, &action);
+                damage = luautils::OnAutomatonAbility(PTargetFound, this, PSkill, PMaster, &action);
             }
             else
             {
-                damage = luautils::OnPetAbility(PTarget, this, PSkill, PMaster, &action);
+                damage = luautils::OnPetAbility(PTargetFound, this, PSkill, PMaster, &action);
             }
         }
         else // Sic or Ready
         {
-            damage = luautils::OnMobWeaponSkill(PTarget, this, PSkill, &action);
-            this->PAI->EventHandler.triggerListener("WEAPONSKILL_USE", CLuaBaseEntity(this), CLuaBaseEntity(PTarget), PSkill->getID(), state.GetSpentTP(), &action);
-            PTarget->PAI->EventHandler.triggerListener("WEAPONSKILL_TAKE", CLuaBaseEntity(PTarget), CLuaBaseEntity(this), PSkill->getID(), state.GetSpentTP(), &action);
+            damage = luautils::OnMobWeaponSkill(PTargetFound, this, PSkill, &action);
+            this->PAI->EventHandler.triggerListener("WEAPONSKILL_USE", CLuaBaseEntity(this), CLuaBaseEntity(PTargetFound), PSkill->getID(), state.GetSpentTP(), &action);
+            PTarget->PAI->EventHandler.triggerListener("WEAPONSKILL_TAKE", CLuaBaseEntity(PTargetFound), CLuaBaseEntity(this), PSkill->getID(), state.GetSpentTP(), &action);
         }
 
         if (msg == 0)
@@ -766,7 +767,7 @@ void CMobEntity::OnMobSkillFinished(CMobSkillState& state, action_t& action)
         if (damage < 0)
         {
             msg          = MSGBASIC_SKILL_RECOVERS_HP; // TODO: verify this message does/does not vary depending on mob/avatar/automaton use
-            target.param = std::clamp(-damage, 0, PTarget->GetMaxHP() - PTarget->health.hp);
+            target.param = std::clamp(-damage, 0, PTargetFound->GetMaxHP() - PTargetFound->health.hp);
         }
         else
         {
@@ -797,11 +798,11 @@ void CMobEntity::OnMobSkillFinished(CMobSkillState& state, action_t& action)
             target.knockback  = std::clamp(PSkill->getKnockback() - PTarget->getMod(Mod::REDUCE_KNOCKBACK), 0, 15);
             if (first && (PSkill->getPrimarySkillchain() != 0))
             {
-                SUBEFFECT effect = battleutils::GetSkillChainEffect(PTarget, PSkill->getPrimarySkillchain(), PSkill->getSecondarySkillchain(),
+                SUBEFFECT effect = battleutils::GetSkillChainEffect(PTargetFound, PSkill->getPrimarySkillchain(), PSkill->getSecondarySkillchain(),
                                                                     PSkill->getTertiarySkillchain());
                 if (effect != SUBEFFECT_NONE)
                 {
-                    int32 skillChainDamage = battleutils::TakeSkillchainDamage(this, PTarget, target.param, nullptr);
+                    int32 skillChainDamage = battleutils::TakeSkillchainDamage(this, PTargetFound, target.param, nullptr);
                     if (skillChainDamage < 0)
                     {
                         target.addEffectParam   = -skillChainDamage;
@@ -818,12 +819,12 @@ void CMobEntity::OnMobSkillFinished(CMobSkillState& state, action_t& action)
                 first = false;
             }
         }
-        PTarget->StatusEffectContainer->DelStatusEffectsByFlag(EFFECTFLAG_DETECTABLE);
-        if (PTarget->isDead())
+        PTargetFound->StatusEffectContainer->DelStatusEffectsByFlag(EFFECTFLAG_DETECTABLE);
+        if (PTargetFound->isDead())
         {
-            battleutils::ClaimMob(PTarget, this);
+            battleutils::ClaimMob(PTargetFound, this);
         }
-        battleutils::DirtyExp(PTarget, this);
+        battleutils::DirtyExp(PTargetFound, this);
     }
 
     PTarget = dynamic_cast<CBattleEntity*>(state.GetTarget()); // TODO: why is this recast here? can state change between now and the original cast?
@@ -972,6 +973,11 @@ void CMobEntity::DropItems(CCharEntity* PChar)
         for (const DropGroup_t& group : DropList.Groups)
         {
             // Gives multiple chances to roll the group
+            uint16 total = 0;
+            for (const DropItem_t& item : group.Items)
+            {
+                total += item.DropRate;
+            }
             for (int16 roll = 0; roll < maxRolls; ++roll)
             {
                 uint16 groupRoll = xirand::GetRandomNumber(1000);
@@ -1511,6 +1517,12 @@ void CMobEntity::OnDespawn(CDespawnState& /*unused*/)
 void CMobEntity::Die()
 {
     TracyZoneScoped;
+
+    if (PBattlefield != nullptr)
+    {
+        PBattlefield->handleDeath(this);
+    }
+
     PEnmityContainer->Clear();
     PAI->ClearStateStack();
     if (PPet != nullptr && PPet->isAlive() && GetMJob() == JOB_SMN)

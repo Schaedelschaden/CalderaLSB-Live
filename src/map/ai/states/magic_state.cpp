@@ -110,6 +110,15 @@ bool CMagicState::Update(time_point tick)
             {
                 m_interrupted = true;
             }
+
+            if (m_PSpell.get()->getSpellGroup() == SPELLGROUP_TRUST)
+            {
+                if (!luautils::OnTrustSpellCastCheckBattlefieldTrusts(PChar))
+                {
+                    msg           = MSGBASIC_TRUST_NO_CAST_TRUST;
+                    m_interrupted = true;
+                }
+            }
         }
         else if (PTarget->objtype == TYPE_PET)
         {
@@ -353,6 +362,7 @@ void CMagicState::ApplyEnmity(CBattleEntity* PTarget, int ce, int ve)
     {
         ce = 0;
     }
+
     if (m_PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_DIVINE_EMBLEM) &&
        (m_PSpell->getSpellFamily() == SPELLFAMILY_HOLY || m_PSpell->getSpellFamily() == SPELLFAMILY_BANISH ||
         m_PSpell->getSpellFamily() == SPELLFAMILY_BANISHGA))

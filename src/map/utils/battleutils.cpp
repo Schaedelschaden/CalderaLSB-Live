@@ -343,10 +343,11 @@ namespace battleutils
      ************************************************************************/
     void FreePetSkillList()
     {
-        for (auto iter = g_PPetSkillList.begin(); iter != g_PPetSkillList.end();)
+        for (auto& petskill : g_PPetSkillList)
         {
-            g_PPetSkillList.erase(iter);
+            delete petskill.second;
         }
+        g_PPetSkillList.clear();
     }
 
     /************************************************************************
@@ -4766,27 +4767,27 @@ namespace battleutils
                 PSCEffect = PDefender->StatusEffectContainer->GetStatusEffect(EFFECT_SKILLCHAIN, 0);
             }
             // Previous effect exists
-            else if (PSCEffect && PSCEffect->GetTier() == 0)
+            else if (PSCEffect && PSCEffect->GetStartTime() + 3s < server_clock::now())
             {
-                XI_DEBUG_BREAK_IF(!PSCEffect->GetPower());
-                // Previous effect is an opening effect, meaning the power is
-                // actually the ID of the opening weaponskill.  We need all 3
-                // of the possible skillchain properties on the initial link.
-                if (PSCEffect->GetStartTime() + 3s < server_clock::now())
+                if (PSCEffect->GetTier() == 0)
                 {
+                    XI_DEBUG_BREAK_IF(!PSCEffect->GetPower());
+                    // Previous effect is an opening effect, meaning the power is
+                    // actually the ID of the opening weaponskill.  We need all 3
+                    // of the possible skillchain properties on the initial link.
                     auto properties = PSCEffect->GetPower();
                     resonanceProperties.push_back((SKILLCHAIN_ELEMENT)(properties & 0b1111));
                     resonanceProperties.push_back((SKILLCHAIN_ELEMENT)((properties >> 4) & 0b1111));
                     resonanceProperties.push_back((SKILLCHAIN_ELEMENT)((properties >> 8) & 0b1111));
                     skillchain = FormSkillchain(resonanceProperties, skillProperties);
                 }
-            }
-            else
-            {
-                // Previous effect is not an opening effect, meaning the power is
-                // The skill chain ID resonating.
-                resonanceProperties.push_back((SKILLCHAIN_ELEMENT)PSCEffect->GetPower());
-                skillchain = FormSkillchain(resonanceProperties, skillProperties);
+                else
+                {
+                    // Previous effect is not an opening effect, meaning the power is
+                    // The skill chain ID resonating.
+                    resonanceProperties.push_back((SKILLCHAIN_ELEMENT)PSCEffect->GetPower());
+                    skillchain = FormSkillchain(resonanceProperties, skillProperties);
+                }
             }
 
             if (skillchain != SC_NONE)
@@ -7738,6 +7739,7 @@ namespace battleutils
 
         return std::clamp<int16>(cost, 0, 9999);
     }
+
     uint32 CalculateSpellRecastTime(CBattleEntity* PEntity, CSpell* PSpell)
     {
         if (PSpell == nullptr)
@@ -7748,7 +7750,7 @@ namespace battleutils
         bool   applyArts = true;
         uint32 base      = PSpell->getRecastTime();
         int32  recast    = base;
-        int32 recastCap  = (int32)(base * 0.2f); // Maximum reduction is 80% of original recast
+        int32  recastCap = (int32)(base * 0.2f); // Maximum reduction is 80% of original recast
 
         if (PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_SPONTANEITY))
         {
@@ -7757,18 +7759,23 @@ namespace battleutils
             return recast / 1000;
         }
 
-        // Apply Fast Cast
+        // Get Fast Cast reduction, caps at 80%/2 = 40% reduction in recast -- https://www.bg-wiki.com/ffxi/Fast_Cast
         recast = (int32)(recast * ((100.0f - std::clamp((float)PEntity->getMod(Mod::FASTCAST) / 2.0f, 0.0f, 40.0f)) / 100.0f));
+        // No known cap (limited by Inspiration merits + Futhark Trousers augment for a total retail cap value of 60%/2 = 30%)
+        float inspirationRecastReduction = static_cast<float>(PEntity->getMod(Mod::INSPIRATION_FAST_CAST)) / 2.0f;
+
+        // Apply Fast Cast & Inspiration
+        recast = static_cast<int32>(recast * ((100.0f - (fastCastReduction + inspirationRecastReduction)) / 100.0f));
 
         // Apply Haste (Magic and Gear)
         int16 haste = (int32)(std::clamp((float)PEntity->getMod(Mod::HASTE_MAGIC), -10000.0f, 4375.0f) + std::clamp((float)PEntity->getMod(Mod::HASTE_GEAR), -10000.0f, 2500.0f));
-        recast -= (int32)(recast * haste / 10000.f);
+        recast      = static_cast<int32>(recast * ((10000.0f - haste) / 10000.0f));
 
         if (PSpell->getSpellGroup() == SPELLGROUP_SONG)
         {
             if (PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_NIGHTINGALE))
             {
-                recast = (int32)(recast * 0.5f);
+                recast = static_cast<int32>(recast * 0.5f);
             }
             // The following modifiers are not multiplicative - as such they must be applied last.
             // ShowDebug("Recast before reduction: %u", recast);
@@ -7790,22 +7797,22 @@ namespace battleutils
 
         if (PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_COMPOSURE))
         {
-            recast = (int32)(recast * 1.25f);
+            recast = static_cast<int32>(recast * 1.25f);
         }
 
         if (PEntity->StatusEffectContainer->HasStatusEffect({ EFFECT_HASSO, EFFECT_SEIGAN }))
         {
-            recast = (int32)(recast * 1.5f);
+            recast = static_cast<int32>(recast * 1.5f);
         }
 
         if ((PEntity->getMod(Mod::SPIRIT_RECAST) > 0) && (PSpell->getID() >= SpellID::Fire_Spirit && PSpell->getID() <= SpellID::Dark_Spirit))
         {
-            recast = (int32)(recast * 0.5f);
+            recast = static_cast<int32>(recast * 0.5f);
         }
 
-        recast = std::max<int32>(recast, (int32)(base * 0.2f));
+        recast = std::max<int32>(recast, static_cast<int32>(base * 0.2f));
 
-        // Light/Dark arts recast bonus/penalties applies after the 80% cap
+        // Light/Dark arts recast bonus/penalties applies after other bonuses
         if (PSpell->getSpellGroup() == SPELLGROUP_BLACK)
         {
             if (PSpell->getAOE() == SPELLAOE_RADIAL_MANI &&
@@ -7820,30 +7827,32 @@ namespace battleutils
                 {
                     recast *= 3;
                 }
-                applyArts = false;
             }
+            else if (PEntity->StatusEffectContainer->HasStatusEffect({ EFFECT_DARK_ARTS, EFFECT_ADDENDUM_BLACK }))
+            {
+                // Add any "Grimoire: Reduces spellcasting time" bonuses + Dark Arts bonus
+                recast = static_cast<int32>(recast * ((100.0f + PEntity->getMod(Mod::BLACK_MAGIC_RECAST) + PEntity->getMod(Mod::GRIMOIRE_SPELLCASTING)) / 100.0f));
+            }
+            else
+            {
+                recast = static_cast<int32>(recast * ((100.0f + PEntity->getMod(Mod::BLACK_MAGIC_RECAST)) / 100.0f));
+            }
+
+            recast = std::max<int32>(recast, static_cast<int32>(base * 0.2f)); // recap to 80%
+
+            // https://www.bg-wiki.com/ffxi/Alacrity
             if (PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_ALACRITY))
             {
-                uint16 bonus = 0;
-                // Only apply Alacrity/celerity mod if the spell element matches the weather.
-                if (battleutils::WeatherMatchesElement(battleutils::GetWeather(PEntity, false), (uint8)PSpell->getElement()))
-                {
-                    bonus = PEntity->getMod(Mod::ALACRITY_CELERITY_EFFECT);
-                }
-                recast = (int32)(recast * ((50 - bonus) / 100.0f));
+                recast = static_cast<int32>(recast * 0.60);                        // 40% reduction from Alacrity alone
+                recast = std::max<int32>(recast, static_cast<int32>(base * 0.2f)); // recap to 80%
 
-                applyArts = false;
-            }
-            if (applyArts)
-            {
-                if (PEntity->StatusEffectContainer->HasStatusEffect({ EFFECT_DARK_ARTS, EFFECT_ADDENDUM_BLACK }))
+                // Only apply bonus mod if the spell element matches the weather, this is allowed to go over the 80% cap to a 90% cap.
+                if (battleutils::WeatherMatchesElement(battleutils::GetWeather(PEntity, false), static_cast<uint8>(PSpell->getElement())))
                 {
-                    // Add any "Grimoire: Reduces spellcasting time" bonuses
-                    recast = (int32)(recast * (1.0f + (PEntity->getMod(Mod::BLACK_MAGIC_RECAST) + PEntity->getMod(Mod::GRIMOIRE_SPELLCASTING)) / 100.0f));
-                }
-                else
-                {
-                    recast = (int32)(recast * (1.0f + PEntity->getMod(Mod::BLACK_MAGIC_RECAST) / 100.0f));
+                    uint16 bonus = PEntity->getMod(Mod::ALACRITY_CELERITY_EFFECT);
+
+                    recast = static_cast<int32>(recast * ((100 - bonus) / 100.0f));
+                    recast = std::max<int32>(recast, static_cast<int32>(base * 0.1f)); // cap to 90% reduction
                 }
             }
             // Elemental Magic Recast
@@ -7870,30 +7879,33 @@ namespace battleutils
                 {
                     recast *= 3;
                 }
-                applyArts = false;
             }
+
+            if (PEntity->StatusEffectContainer->HasStatusEffect({ EFFECT_LIGHT_ARTS, EFFECT_ADDENDUM_WHITE }))
+            {
+                // Add any "Grimoire: Reduces spellcasting time" bonuses + Light Arts bonus
+                recast = static_cast<int32>(recast * ((100.f + PEntity->getMod(Mod::WHITE_MAGIC_RECAST) + PEntity->getMod(Mod::GRIMOIRE_SPELLCASTING)) / 100.0f));
+            }
+            else
+            {
+                recast = static_cast<int32>(recast * ((100.0f + PEntity->getMod(Mod::WHITE_MAGIC_RECAST)) / 100.0f));
+            }
+
+            recast = std::max<int32>(recast, static_cast<int32>(base * 0.2f)); // recap to 80%
+
+            // https://www.bg-wiki.com/ffxi/Celerity
             if (PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_CELERITY))
             {
-                uint16 bonus = 0;
-                // Only apply Alacrity/celerity mod if the spell element matches the weather.
-                if (battleutils::WeatherMatchesElement(battleutils::GetWeather(PEntity, true), (uint8)PSpell->getElement()))
-                {
-                    bonus = PEntity->getMod(Mod::ALACRITY_CELERITY_EFFECT);
-                }
-                recast = (int32)(recast * ((50 - bonus) / 100.0f));
+                recast = static_cast<int32>(recast * 0.60);                        // 40% reduction from Celerity alone
+                recast = std::max<int32>(recast, static_cast<int32>(base * 0.2f)); // recap to 80%
 
-                applyArts = false;
-            }
-            if (applyArts)
-            {
-                if (PEntity->StatusEffectContainer->HasStatusEffect({ EFFECT_LIGHT_ARTS, EFFECT_ADDENDUM_WHITE }))
+                // Only apply bonus mod if the spell element matches the weather, this is allowed to go over the 80% cap to a 90% cap.
+                if (battleutils::WeatherMatchesElement(battleutils::GetWeather(PEntity, false), static_cast<uint8>(PSpell->getElement())))
                 {
-                    // Add any "Grimoire: Reduces spellcasting time" bonuses
-                    recast = (int32)(recast * (1.0f + (PEntity->getMod(Mod::WHITE_MAGIC_RECAST) + PEntity->getMod(Mod::GRIMOIRE_SPELLCASTING)) / 100.0f));
-                }
-                else
-                {
-                    recast = (int32)(recast * (1.0f + PEntity->getMod(Mod::WHITE_MAGIC_RECAST) / 100.0f));
+                    uint16 bonus = PEntity->getMod(Mod::ALACRITY_CELERITY_EFFECT);
+
+                    recast = static_cast<int32>(recast * ((100 - bonus) / 100.0f));
+                    recast = std::max<int32>(recast, static_cast<int32>(base * 0.1f)); // cap to 90% reduction
                 }
             }
         }
@@ -7908,7 +7920,7 @@ namespace battleutils
             recast = recastCap;
         }
 
-        recast = std::max(recast, 0);
+        recast = std::max<int32>(recast, 0);
 
         return recast / 1000;
     }

@@ -431,8 +431,14 @@ void SmallPacket0x00C(map_session_data_t* const PSession, CCharEntity* const PCh
         {
             switch (PChar->petZoningInfo.petType)
             {
-                case PET_TYPE::AUTOMATON:
                 case PET_TYPE::JUG_PET:
+                    if (!settings::get<bool>("map.KEEP_JUGPET_THROUGH_ZONING"))
+                    {
+                        break;
+                    }
+                    [[fallthrough]];
+                case PET_TYPE::AVATAR:
+                case PET_TYPE::AUTOMATON:
                 case PET_TYPE::WYVERN:
                 case PET_TYPE::LUOPAN:
                     petutils::SpawnPet(PChar, PChar->petZoningInfo.petID, true);
@@ -441,10 +447,10 @@ void SmallPacket0x00C(map_session_data_t* const PSession, CCharEntity* const PCh
                 default:
                     break;
             }
+            // Reset the petZoning info
+            PChar->resetPetZoningInfo();
         }
     }
-    // Reset the petZoning info
-    PChar->resetPetZoningInfo();
 }
 
 /************************************************************************
@@ -836,7 +842,7 @@ void SmallPacket0x01A(map_session_data_t* const PSession, CCharEntity* const PCh
             }
 
             CBaseEntity* PNpc = nullptr;
-            PNpc              = PChar->GetEntity(TargID, TYPE_NPC);
+            PNpc              = PChar->GetEntity(TargID, TYPE_NPC | TYPE_MOB);
 
             if (PNpc != nullptr && distance(PNpc->loc.p, PChar->loc.p) <= 10 && (PNpc->PAI->IsSpawned() || PChar->m_moghouseID != 0))
             {
@@ -1054,6 +1060,8 @@ void SmallPacket0x01A(map_session_data_t* const PSession, CCharEntity* const PCh
             PChar->animation = ANIMATION_NONE;
             PChar->updatemask |= UPDATE_HP;
             PChar->StatusEffectContainer->DelStatusEffectSilent(EFFECT_MOUNTED);
+            // Workaround for a bug where dismounting out of update range would cause the character to stop rendering.
+            PChar->loc.zone->PushPacket(PChar, CHAR_INZONE, new CCharPacket(PChar, ENTITY_UPDATE, UPDATE_HP));
         }
         break;
         case 0x13: // tractor menu
@@ -1310,7 +1318,7 @@ void SmallPacket0x028(map_session_data_t* const PSession, CCharEntity* const PCh
 
     // Linkshells (other than Linkpearls and Pearlsacks) and temporary items cannot be stored in the Recycle Bin.
     // TODO: Are there any special messages here?
-    if (PItem->isType(ITEM_LINKSHELL) || container == CONTAINER_ID::LOC_TEMPITEMS)
+    if (!settings::get<bool>("map.ENABLE_ITEM_RECYCLE_BIN") || PItem->isType(ITEM_LINKSHELL) || container == CONTAINER_ID::LOC_TEMPITEMS)
     {
         charutils::DropItem(PChar, container, slotID, quantity, ItemID);
         return;
@@ -1358,10 +1366,10 @@ void SmallPacket0x029(map_session_data_t* const PSession, CCharEntity* const PCh
         uint8 size = PChar->getStorage(FromLocationID)->GetSize();
         for (uint8 slotID = 0; slotID <= size; ++slotID)
         {
-            CItem* PItem = PChar->getStorage(FromLocationID)->GetItem(slotID);
-            if (PItem != nullptr)
+            CItem* PSlotItem = PChar->getStorage(FromLocationID)->GetItem(slotID);
+            if (PSlotItem != nullptr)
             {
-                PChar->pushPacket(new CInventoryItemPacket(PItem, FromLocationID, slotID));
+                PChar->pushPacket(new CInventoryItemPacket(PSlotItem, FromLocationID, slotID));
             }
         }
         PChar->pushPacket(new CInventoryFinishPacket());
@@ -1418,10 +1426,10 @@ void SmallPacket0x029(map_session_data_t* const PSession, CCharEntity* const PCh
             uint8 size = PChar->getStorage(ToLocationID)->GetSize();
             for (uint8 slotID = 0; slotID <= size; ++slotID)
             {
-                CItem* PItem = PChar->getStorage(ToLocationID)->GetItem(slotID);
-                if (PItem != nullptr)
+                CItem* PSlotItem = PChar->getStorage(ToLocationID)->GetItem(slotID);
+                if (PSlotItem != nullptr)
                 {
-                    PChar->pushPacket(new CInventoryItemPacket(PItem, ToLocationID, slotID));
+                    PChar->pushPacket(new CInventoryItemPacket(PSlotItem, ToLocationID, slotID));
                 }
             }
             PChar->pushPacket(new CInventoryFinishPacket());
@@ -2378,7 +2386,8 @@ void SmallPacket0x04D(map_session_data_t* const PSession, CCharEntity* const PCh
                         }
 
                         uint32 accid = sql->GetUIntData(1);
-                        int32  ret   = sql->Query("SELECT COUNT(*) FROM chars WHERE charid = '%u' AND accid = '%u' LIMIT 1;", PChar->id, accid);
+
+                        ret = sql->Query("SELECT COUNT(*) FROM chars WHERE charid = '%u' AND accid = '%u' LIMIT 1;", PChar->id, accid);
                         if (ret == SQL_ERROR || sql->NextRow() != SQL_SUCCESS || sql->GetUIntData(0) == 0)
                         {
                             return;
@@ -2511,7 +2520,7 @@ void SmallPacket0x04D(map_session_data_t* const PSession, CCharEntity* const PCh
 
                         if (ret != SQL_ERROR && sql->AffectedRows() == 1)
                         {
-                            int32 ret = sql->Query(
+                            ret = sql->Query(
                                 "DELETE FROM delivery_box WHERE senderid = %u AND box = 1 AND charid = %u AND itemid = %u AND quantity = %u "
                                 "AND slot >= 8 LIMIT 1;",
                                 PChar->id, charid, PItem->getID(), PItem->getQuantity());
@@ -2543,7 +2552,7 @@ void SmallPacket0x04D(map_session_data_t* const PSession, CCharEntity* const PCh
                         if (orphan)
                         {
                             sql->SetAutoCommit(true);
-                            int32 ret = sql->Query(
+                            ret = sql->Query(
                                 "DELETE FROM delivery_box WHERE box = 2 AND charid = %u AND itemid = %u AND quantity = %u AND slot = %u LIMIT 1;",
                                 PChar->id, PItem->getID(), PItem->getQuantity(), slotID);
                             if (ret != SQL_ERROR && sql->AffectedRows() == 1)
@@ -2693,7 +2702,7 @@ void SmallPacket0x04D(map_session_data_t* const PSession, CCharEntity* const PCh
             }
 
             uint8 received_items = 0;
-            uint8 slotID         = 0;
+            uint8 deliverySlotID = 0;
 
             int32 ret = sql->Query("SELECT slot FROM delivery_box WHERE charid = %u AND received = 1 AND box = 2 ORDER BY slot ASC;", PChar->id);
 
@@ -2702,18 +2711,18 @@ void SmallPacket0x04D(map_session_data_t* const PSession, CCharEntity* const PCh
                 received_items = (uint8)sql->NumRows();
                 if (received_items && sql->NextRow() == SQL_SUCCESS)
                 {
-                    slotID = sql->GetUIntData(0);
-                    if (!PChar->UContainer->IsSlotEmpty(slotID))
+                    deliverySlotID = sql->GetUIntData(0);
+                    if (!PChar->UContainer->IsSlotEmpty(deliverySlotID))
                     {
-                        CItem* PItem = PChar->UContainer->GetItem(slotID);
+                        CItem* PItem = PChar->UContainer->GetItem(deliverySlotID);
                         if (PItem->isSent())
                         {
-                            ret = sql->Query("DELETE FROM delivery_box WHERE charid = %u AND box = 2 AND slot = %u LIMIT 1;", PChar->id, slotID);
+                            ret = sql->Query("DELETE FROM delivery_box WHERE charid = %u AND box = 2 AND slot = %u LIMIT 1;", PChar->id, deliverySlotID);
                             if (ret != SQL_ERROR && sql->AffectedRows() == 1)
                             {
                                 PChar->pushPacket(new CDeliveryBoxPacket(action, boxtype, 0, 0x02));
-                                PChar->pushPacket(new CDeliveryBoxPacket(action, boxtype, PItem, slotID, received_items, 0x01));
-                                PChar->UContainer->SetItem(slotID, nullptr);
+                                PChar->pushPacket(new CDeliveryBoxPacket(action, boxtype, PItem, deliverySlotID, received_items, 0x01));
+                                PChar->UContainer->SetItem(deliverySlotID, nullptr);
                                 delete PItem;
                             }
                         }
@@ -3050,9 +3059,9 @@ void SmallPacket0x04E(map_session_data_t* const PSession, CCharEntity* const PCh
         {
             auto totalItemsOnAh = PChar->m_ah_history.size();
 
-            for (size_t slot = 0; slot < totalItemsOnAh; slot++)
+            for (size_t auctionSlot = 0; auctionSlot < totalItemsOnAh; auctionSlot++)
             {
-                PChar->pushPacket(new CAuctionHousePacket(0x0C, (uint8)slot, PChar));
+                PChar->pushPacket(new CAuctionHousePacket(0x0C, (uint8)auctionSlot, PChar));
             }
         }
         break;
@@ -3406,19 +3415,33 @@ void SmallPacket0x053(map_session_data_t* const PSession, CCharEntity* const PCh
     }
 }
 
-/************************************************************************
- *                                                                        *
- *  Request synthesis suggestion                                            *
- *                                                                        *
+/*************************************************************************
+ *                                                                       *
+ *  Request synthesis suggestion                                         *
+ *                                                                       *
  ************************************************************************/
 
 void SmallPacket0x058(map_session_data_t* const PSession, CCharEntity* const PChar, CBasicPacket data)
 {
     TracyZoneScoped;
-    uint16 skillID    = data.ref<uint16>(0x04);
-    uint16 skillLevel = data.ref<uint16>(0x06);
+    uint16 skillID     = data.ref<uint16>(0x04);
+    uint16 skillLevel  = data.ref<uint16>(0x06); // Player's current skill level (whole number only)
+    uint8  requestType = data.ref<uint8>(0x0A);  // 02 is list view, 03 is recipe
+    uint8  skillRank   = data.ref<uint8>(0x12);  // Requested Rank for item suggestions
 
-    PChar->pushPacket(new CSynthSuggestionPacket(skillID, skillLevel));
+    if (requestType == 2)
+    {
+        // For pagination, the client sends the range in increments of 16. (0..0x10, 0x10..0x20, etc)
+        // uint16 resultMax  = data.ref<uint16>(0x0E); // Unused, maximum in range is always 16 greater
+        uint16 resultMin = data.ref<uint16>(0x0C);
+
+        PChar->pushPacket(new CSynthSuggestionListPacket(skillID, skillLevel, skillRank, resultMin));
+    }
+    else
+    {
+        uint16 selectedRecipeOffset = data.ref<uint16>(0x10);
+        PChar->pushPacket(new CSynthSuggestionRecipePacket(skillID, skillLevel, skillRank, selectedRecipeOffset));
+    }
 }
 
 /************************************************************************
@@ -4749,10 +4772,10 @@ void SmallPacket0x096(map_session_data_t* const PSession, CCharEntity* const PCh
 
     uint8 numItems = data.ref<uint8>(0x09);
 
-    std::vector<uint8> slotQty(MAX_CONTAINER_SIZE);
-
-    if (numItems > 8)
+    auto PItem = PChar->getStorage(LOC_INVENTORY)->GetItem(invSlotID);
+    if (!PItem || ItemID != PItem->getID() || PItem->getQuantity() == 0 || numItems > 8)
     {
+        // Detect invalid crystal usage
         // Prevent crafting exploit to crash on container size > 8
         PChar->pushPacket(new CMessageBasicPacket(PChar, PChar, 0, 0, 316));
         return;
@@ -4760,6 +4783,7 @@ void SmallPacket0x096(map_session_data_t* const PSession, CCharEntity* const PCh
 
     PChar->CraftContainer->setItem(0, ItemID, invSlotID, 0);
 
+    std::vector<uint8> slotQty(MAX_CONTAINER_SIZE);
     for (int32 SlotID = 0; SlotID < numItems; ++SlotID)
     {
         ItemID    = data.ref<uint16>(0x0A + SlotID * 2);
@@ -4767,9 +4791,9 @@ void SmallPacket0x096(map_session_data_t* const PSession, CCharEntity* const PCh
 
         slotQty[invSlotID]++;
 
-        auto* PItem = PChar->getStorage(LOC_INVENTORY)->GetItem(invSlotID);
+        auto* PSlotItem = PChar->getStorage(LOC_INVENTORY)->GetItem(invSlotID);
 
-        if (PItem && PItem->getID() == ItemID && slotQty[invSlotID] <= (PItem->getQuantity() - PItem->getReserve()))
+        if (PSlotItem && PSlotItem->getID() == ItemID && slotQty[invSlotID] <= (PSlotItem->getQuantity() - PSlotItem->getReserve()))
         {
             PChar->CraftContainer->setItem(SlotID + 1, ItemID, invSlotID, 1);
         }
@@ -5200,11 +5224,15 @@ void SmallPacket0x0B6(map_session_data_t* const PSession, CCharEntity* const PCh
 
     std::string RecipientName = std::string((const char*)data[6], 15);
 
+    char  message[256]    = {}; // /t messages using "<t>" with a long named NPC targeted caps out at 138 bytes, increasing to the nearest power of 2
+    uint8 messagePosition = 0x15;
+
+    memcpy(&message, data[messagePosition], data.getSize() - messagePosition);
+
     if (strcmp(RecipientName.c_str(), "_CUSTOM_MENU") == 0 &&
         luautils::HasCustomMenuContext(PChar))
     {
-        std::string selection((const char*)data[21]);
-        luautils::HandleCustomMenu(PChar, selection);
+        luautils::HandleCustomMenu(PChar, message);
         return;
     }
 
@@ -5212,7 +5240,7 @@ void SmallPacket0x0B6(map_session_data_t* const PSession, CCharEntity* const PCh
     strncpy((char*)packetData + 4, RecipientName.c_str(), RecipientName.length() + 1);
     ref<uint32>(packetData, 0) = PChar->id;
 
-    message::send(MSG_CHAT_TELL, packetData, RecipientName.length() + 5, new CChatMessagePacket(PChar, MESSAGE_TELL, (const char*)data[21]));
+    message::send(MSG_CHAT_TELL, packetData, RecipientName.length() + 5, new CChatMessagePacket(PChar, MESSAGE_TELL, message));
 
     if (settings::get<bool>("map.AUDIT_CHAT") && settings::get<bool>("map.AUDIT_TELL"))
     {
@@ -6144,6 +6172,11 @@ void SmallPacket0x0E8(map_session_data_t* const PSession, CCharEntity* const PCh
         break;
         case ANIMATION_HEALING:
         {
+            if (data.ref<uint8>(0x04) == 0x01)
+            {
+                return;
+            }
+
             PChar->StatusEffectContainer->DelStatusEffect(EFFECT_HEALING);
         }
         break;
@@ -6766,6 +6799,7 @@ void SmallPacket0x100(map_session_data_t* const PSession, CCharEntity* const PCh
             JOBTYPE prevjob = PChar->GetMJob();
             PChar->resetPetZoningInfo();
 
+            charutils::SaveJobChangeGear(PChar);
             charutils::RemoveAllEquipment(PChar);
             PChar->SetMJob(mjob);
             PChar->SetMLevel(PChar->jobs.job[PChar->GetMJob()]);
@@ -6780,6 +6814,15 @@ void SmallPacket0x100(map_session_data_t* const PSession, CCharEntity* const PCh
             else if (prevjob == JOB_BLU)
             {
                 blueutils::UnequipAllBlueSpells(PChar);
+            }
+
+            bool canUseMeritMode = PChar->jobs.job[PChar->GetMJob()] >= 75 && charutils::hasKeyItem(PChar, 606);
+            if (!canUseMeritMode && PChar->MeritMode == true)
+            {
+                if (sql->Query("UPDATE char_exp SET mode = %u WHERE charid = %u", 0, PChar->id) != SQL_ERROR)
+                {
+                    PChar->MeritMode = false;
+                }
             }
         }
 
@@ -6824,8 +6867,9 @@ void SmallPacket0x100(map_session_data_t* const PSession, CCharEntity* const PCh
         PChar->PRecastContainer->ChangeJob();
         charutils::BuildingCharAbilityTable(PChar);
         charutils::BuildingCharWeaponSkills(PChar);
+        charutils::LoadJobChangeGear(PChar);
 
-        PChar->StatusEffectContainer->DelStatusEffectsByFlag(EFFECTFLAG_DISPELABLE | EFFECTFLAG_ON_JOBCHANGE);
+        PChar->StatusEffectContainer->DelStatusEffectsByFlag(EFFECTFLAG_DISPELABLE | EFFECTFLAG_ROLL | EFFECTFLAG_ON_JOBCHANGE);
 
         PChar->ForParty([](CBattleEntity* PMember)
                         { ((CCharEntity*)PMember)->PLatentEffectContainer->CheckLatentsPartyJobs(); });

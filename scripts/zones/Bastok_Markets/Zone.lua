@@ -1,11 +1,10 @@
 -----------------------------------
 -- Zone: Bastok_Markets (235)
 -----------------------------------
-require("scripts/globals/events/harvest_festivals")
-require("scripts/globals/missions")
-require("scripts/globals/settings")
-require("scripts/globals/zone")
-local ID = require("scripts/zones/Bastok_Markets/IDs")
+require('scripts/globals/events/harvest_festivals')
+require('scripts/globals/settings')
+require('scripts/globals/zone')
+local ID = require('scripts/zones/Bastok_Markets/IDs')
 -----------------------------------
 local zone_object = {}
 
@@ -53,7 +52,6 @@ zone_object.onEventUpdate = function(player, csid, option)
 end
 
 zone_object.onEventFinish = function(player, csid, option)
-
     if csid == 0 then
         player:messageSpecial(ID.text.ITEM_OBTAINED, 536)
     end

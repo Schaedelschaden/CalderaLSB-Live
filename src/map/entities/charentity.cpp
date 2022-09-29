@@ -420,6 +420,12 @@ void CCharEntity::setPetZoningInfo()
         switch (((CPetEntity*)PPet)->getPetType())
         {
             case PET_TYPE::JUG_PET:
+                if (!settings::get<bool>("map.KEEP_JUGPET_THROUGH_ZONING"))
+                {
+                    break;
+                }
+                [[fallthrough]];
+            case PET_TYPE::AVATAR:
             case PET_TYPE::AUTOMATON:
             case PET_TYPE::WYVERN:
                 petZoningInfo.petHP   = PPet->health.hp;
@@ -1375,29 +1381,34 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
         }
         else if (PAbility->getID() == ABILITY_DEACTIVATE && PAutomaton && PAutomaton->health.hp == PAutomaton->GetMaxHP())
         {
-            CAbility* PAbility = ability::GetAbility(ABILITY_ACTIVATE);
-            if (PAbility)
+            CAbility* PActivateAbility = ability::GetAbility(ABILITY_ACTIVATE);
+            if (PActivateAbility)
             {
-                PRecastContainer->Del(RECAST_ABILITY, PAbility->getRecastId());
+                PRecastContainer->Del(RECAST_ABILITY, PActivateAbility->getRecastId());
             }
         }
-        // Handle Apogee and Astral Conduit's recast reset
-        else if (PAbility->getID() >= ABILITY_HEALING_RUBY && PAbility->getID() <= ABILITY_PERFECT_DEFENSE ||
-                 PAbility->getID() == ABILITY_REGAL_GASH ||
-                 PAbility->getID() >= ABILITY_CLARSACH_CALL && PAbility->getID() <= ABILITY_HYSTERIC_ASSAULT)
+        else if (PAbility->getRecastId() == 173 || PAbility->getRecastId() == 174) // BP rage, BP ward
         {
-            if (this->StatusEffectContainer->HasStatusEffect(EFFECT_APOGEE) || this->StatusEffectContainer->HasStatusEffect(EFFECT_ASTRAL_CONDUIT))
-            {
-                action.recast = 0;
-            }
-            else
-            {
-                // Blood Pact recasts can be reduced by a total of 40 seconds
-                int16 bpDelay    = std::min<int16>(getMod(Mod::BP_DELAY), 15);
-                int16 bpDelayII  = std::min<int16>(getMod(Mod::BP_DELAY_II), 15);
-                int16 favorDelay = std::min<int16>(getMod(Mod::AVATARS_FAVOR_BP_DELAY), 10);
+            uint16 favorReduction          = 0;
+            uint16 bloodPact_I_Reduction   = std::min<int16>(getMod(Mod::BP_DELAY), 15);
+            uint16 bloodPact_II_Reduction  = std::min<int16>(getMod(Mod::BP_DELAY_II), 15);
+            uint16 bloodPact_III_Reduction = 0; // std::min<int16>(getMod(Mod::BP_DELAY_III, 10); TODO: BP Delay III (SMN JP gift) not implemented
 
-                action.recast   -= bpDelay + bpDelayII + favorDelay;
+            CStatusEffect* avatarsFavor = this->StatusEffectContainer->GetStatusEffect(EFFECT_AVATARS_FAVOR);
+            if (avatarsFavor)
+            {
+                favorReduction = std::min<int16>(avatarsFavor->GetPower(), 10);
+            }
+
+            int16 bloodPactDelayReduction = favorReduction + std::min<int16>(bloodPact_I_Reduction + bloodPact_II_Reduction + bloodPact_III_Reduction, 40);
+            action.recast                 = static_cast<uint16>(std::max<int16>(0, action.recast - bloodPactDelayReduction));
+
+            if (PAbility->getID() >= ABILITY_HEALING_RUBY && PAbility->getID() <= ABILITY_PERFECT_DEFENSE) // old mobskill impl of Apogee. As things move to petskill this will need to be obsoleted. scripts/job_utils/summoner.lua handles apogee retail-like.
+            {
+                if (this->StatusEffectContainer->HasStatusEffect(EFFECT_APOGEE) || this->StatusEffectContainer->HasStatusEffect(EFFECT_ASTRAL_CONDUIT))
+                {
+                    action.recast = 0;
+                }
             }
         }
 
@@ -1437,7 +1448,7 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
             CPetEntity* PPetEntity = dynamic_cast<CPetEntity*>(PPet);
             CPetSkill*  PPetSkill  = battleutils::GetPetSkill(PAbility->getID());
 
-            if (PPetEntity && PPetSkill) // is a real pet (not charmed) and has pet ability  - don't display msg and notify pet
+            if (PPetEntity && PPetEntity->getPetType() != PET_TYPE::JUG_PET && PPetSkill) // is a real pet (not charmed or a jugpet which is mob-like) and has pet ability - don't display msg and notify pet
             {
                 actionList_t& actionList     = action.getNewActionList();
                 actionList.ActionTargetID    = PTarget->id;
@@ -1537,44 +1548,47 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
             PAI->TargetFind->findWithinArea(this, AOE_RADIUS::ATTACKER, distance);
 
             uint8 totalTargets = (uint8)PAI->TargetFind->m_targets.size();
-            
+
             PAbility->setTotalTargets(totalTargets);
 
-            uint16 msg = 0;
-
-            for (auto&& PTarget : PAI->TargetFind->m_targets)
+            uint16 prevMsg = 0;
+            for (auto&& PTargetFound : PAI->TargetFind->m_targets)
             {
                 actionList_t& actionList     = action.getNewActionList();
-                actionList.ActionTargetID    = PTarget->id;
+                actionList.ActionTargetID    = PTargetFound->id;
                 actionTarget_t& actionTarget = actionList.getNewActionTarget();
                 actionTarget.reaction        = REACTION::NONE;
                 actionTarget.speceffect      = SPECEFFECT::NONE;
                 actionTarget.animation       = PAbility->getAnimationID();
                 actionTarget.messageID       = PAbility->getMessage();
+                actionTarget.param           = 0;
 
-                if (msg == 0)
-                {
-                    msg = PAbility->getMessage();
-                }
-                else
-                {
-                    msg = PAbility->getAoEMsg();
-                }
+                int32 value = luautils::OnUseAbility(this, PTargetFound, PAbility, &action);
 
-                if (actionTarget.param < 0)
+                if (prevMsg == 0) // get default message for the first target
                 {
-                    msg                = ability::GetAbsorbMessage(msg);
-                    actionTarget.param = -actionTarget.param;
+                    actionTarget.messageID = PAbility->getMessage();
+                }
+                else // get AoE message for second, if there's a manual override, otherwise return message from PAbility->getMessage().
+                {
+                    actionTarget.messageID = PAbility->getAoEMsg();
                 }
 
-                actionTarget.messageID = msg;
-                actionTarget.param     = luautils::OnUseAbility(this, PTarget, PAbility, &action);
+                actionTarget.param = value;
+
+                if (value < 0)
+                {
+                    actionTarget.messageID = ability::GetAbsorbMessage(prevMsg);
+                    actionTarget.param     = -actionTarget.param;
+                }
 
                 if (PTarget->objtype == TYPE_MOB)
                 {
                     // Trigger Treasure Hunter from AoE ability
                     battleutils::ApplyTreasureHunter(this, PTarget, &actionTarget, false);
                 }
+
+                state.ApplyEnmity();
             }
         }
         else
@@ -1586,9 +1600,17 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
             actionTarget.speceffect      = SPECEFFECT::RECOIL;
             actionTarget.animation       = PAbility->getAnimationID();
             actionTarget.param           = 0;
-            auto prevMsg                 = actionTarget.messageID;
+            uint16 prevMsg               = actionTarget.messageID;
+
+            // Check for special situations from Steal (The Tenshodo Showdown quest)
+            if (PAbility->getID() == ABILITY_STEAL)
+            {
+                // Force a specific result to be stolen based on the mob LUA
+                actionTarget.param = luautils::OnSteal(this, PTarget, PAbility, &action);
+            }
 
             int32 value = luautils::OnUseAbility(this, PTarget, PAbility, &action);
+
             if (prevMsg == actionTarget.messageID)
             {
                 actionTarget.messageID = PAbility->getMessage();
@@ -1615,7 +1637,15 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
                 battleutils::ApplyTreasureHunter(this, PTarget, &actionTarget, false);
             }
         }
-        PRecastContainer->Add(RECAST_ABILITY, PAbility->getRecastId(), action.recast);
+
+        if (charge)
+        {
+            PRecastContainer->Add(RECAST_ABILITY, PAbility->getRecastId(), action.recast, charge->chargeTime, charge->maxCharges);
+        }
+        else
+        {
+            PRecastContainer->Add(RECAST_ABILITY, PAbility->getRecastId(), action.recast);
+        }
 
         uint16 recastID = PAbility->getRecastId();
         if (settings::get<bool>("map.BLOOD_PACT_SHARED_TIMER") && (recastID == 173 || recastID == 174))
@@ -1767,7 +1797,7 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
                 // https://www.bg-wiki.com/ffxi/Distance_Correction
                 // https://ffxiclopedia.fandom.com/wiki/Distance
                 // TODO: Check for target model size and increase allowable distance
-                
+
                 // Throwing (Ranged or Ammo slot)
                 if (rangedThrowing == true || ammoThrowing == true)
                 {
@@ -1782,11 +1812,11 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
                         damage = (int32)(damage * damagePenalty);
                     }
                 }
-                
+
                 if (PItem != nullptr && PItem->getSkillType() == SKILL_MARKSMANSHIP)
                 {
                     rangedDelay = ((PItem->getDelay() * 60) / 1000);
-                    
+
                     // Marksmanship (Crossbow)
                     if (rangedDelay <= 436)
                     {
@@ -1806,7 +1836,7 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
                             damage = (int32)(damage * damagePenalty);
                         }
                     }
-                    
+
                     //Marksmanship (Gun)
                     if (rangedDelay >= 466)
                     {
@@ -1827,11 +1857,11 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
                         }
                     }
                 }
-                
+
                 if (PItem != nullptr && PItem->getSkillType() == SKILL_ARCHERY)
                 {
                     rangedDelay = ((PItem->getDelay() * 60) / 1000);
-                    
+
                     // Archery (Shortbow)
                     if (rangedDelay <= 436)
                     {
@@ -1851,7 +1881,7 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
                             damage = (int32)(damage * damagePenalty);
                         }
                     }
-                        
+
                     // Archery (Longbow)
                     if (rangedDelay >= 466)
                     {
@@ -2916,14 +2946,9 @@ void CCharEntity::tryStartNextEvent()
     if (PNpc && PNpc->objtype == TYPE_NPC)
     {
         PNpc->SetLocalVar("pauseNPCPathing", 1);
-
-        if (PNpc->PAI->PathFind != nullptr)
-        {
-            PNpc->PAI->PathFind->Clear();
-        }
     }
 
-    // If it's a cutsene, we lock the player immediately
+    // If it's a cutscene, we lock the player immediately
     setLocked(currentEvent->type == CUTSCENE);
 
     if (currentEvent->strings.empty())
